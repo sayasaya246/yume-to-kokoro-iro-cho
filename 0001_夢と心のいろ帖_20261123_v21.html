@@ -1,0 +1,2238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="app-version" content="v07">
+  <meta name="color-scheme" content="light">
+  <title>夢と心のいろ帖</title>
+  <style>
+    /* ===== デザイントークン（手書きCSS。外部読み込みなし） ===== */
+    :root {
+      --bg: #faf8f5;
+      --surface: #ffffff;
+      --ink: #292524;
+      --ink-2: #44403c;
+      --ink-sub: #57534e;
+      --line: #d6d3d1;
+      --line-soft: #e7e5e4;
+      --accent: #5b21b6;
+      --err: #b91c1c;
+      --warn-bg: #fef3c7;
+      --warn-ink: #78350f;
+      --ok-bg: #ecfdf5;
+      --ok-ink: #065f46;
+      --pending-line: #78716c;
+      --pending-fill: #e7e5e4;
+      --radius: 16px;
+      --radius-lg: 22px;
+      --tap: 44px;
+      --gap: 16px;
+      --nav-h: 64px;
+      --font: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    html, body { margin: 0; padding: 0; max-width: 100%; overflow-x: hidden; }
+    body {
+      font-family: var(--font); font-size: 16px; line-height: 1.7;
+      background: var(--bg); color: var(--ink-2);
+      -webkit-tap-highlight-color: transparent; min-height: 100vh;
+    }
+    img, svg, canvas { max-width: 100%; display: block; }
+    h1, h2, h3, h4, p { margin: 0; }
+    button, input, textarea, select { font: inherit; color: inherit; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    [hidden] { display: none !important; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+    }
+
+    /* ===== 外枠 ===== */
+    .app-header {
+      position: sticky; top: 0; z-index: 30;
+      background: rgba(250, 248, 245, 0.96); border-bottom: 1px solid var(--line-soft);
+      padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top));
+    }
+    .wrap { width: 100%; max-width: 28rem; margin: 0 auto; }
+    .header-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .app-title { font-size: 16px; font-weight: 700; color: var(--ink); line-height: 1.4; }
+    .app-sub { font-size: 12px; color: var(--ink-sub); }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px;
+      font-size: 13px; font-weight: 700; color: var(--ink-2); white-space: nowrap;
+    }
+    .chip-dot { width: 8px; height: 8px; border-radius: 50%; background: #059669; }
+    main.app-main {
+      padding: 16px;
+      padding-bottom: calc(var(--nav-h) + 32px + env(safe-area-inset-bottom));
+    }
+    .screen > * + * { margin-top: var(--gap); }
+    .screen-head h2 { font-size: 20px; font-weight: 700; color: var(--ink); line-height: 1.4; }
+    .screen-head p { font-size: 14px; color: var(--ink-sub); margin-top: 4px; }
+
+    .notices:empty { display: none; }
+    .notices { margin-bottom: var(--gap); }
+    .notice {
+      border-radius: var(--radius); padding: 12px 14px; font-size: 14px; line-height: 1.6;
+      background: var(--warn-bg); color: var(--warn-ink); border: 1px solid #fcd34d;
+    }
+    .notice + .notice { margin-top: 8px; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--line-soft);
+      border-radius: var(--radius-lg); padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .card > * + * { margin-top: 12px; }
+    .card-title { font-size: 16px; font-weight: 700; color: var(--ink); }
+    .section-label { font-size: 14px; font-weight: 700; color: var(--ink-sub); }
+    .text-sub { font-size: 14px; color: var(--ink-sub); }
+    .text-xs { font-size: 12px; color: var(--ink-sub); }
+    .text-body { font-size: 15px; color: var(--ink-2); }
+    .text-user { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
+    .clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* ===== ボタン（押せる部品は44px以上） ===== */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 48px; min-width: var(--tap); padding: 10px 18px;
+      border-radius: var(--radius); border: 1px solid transparent;
+      font-size: 16px; font-weight: 700; line-height: 1.4; text-align: center;
+      cursor: pointer; text-decoration: none; touch-action: manipulation;
+    }
+    .btn-block { display: flex; width: 100%; }
+    .btn-primary { background: var(--ink); color: #ffffff; }
+    .btn-primary:active { background: #1c1917; }
+    .btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--line); }
+    .btn-secondary:active { background: #f5f5f4; }
+    .btn[disabled], .btn[aria-disabled="true"] {
+      background: #f5f5f4; color: var(--ink-sub); border: 1px dashed var(--line); cursor: not-allowed;
+    }
+    .btn-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: var(--tap); height: var(--tap); min-width: var(--tap); min-height: var(--tap);
+      border-radius: 50%; border: 1px solid var(--line); background: var(--surface);
+      font-size: 20px; line-height: 1; cursor: pointer; color: var(--ink);
+    }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn-row > .btn { flex: 1 1 120px; }
+    .link-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: var(--tap); min-width: var(--tap); padding: 0 12px;
+      background: none; border: none; cursor: pointer;
+      font-size: 13px; color: var(--ink-sub); text-decoration: underline; text-underline-offset: 3px;
+    }
+
+    /* ===== 下のナビ（2つ） ===== */
+    .app-nav {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+      background: rgba(255, 255, 255, 0.98); border-top: 1px solid var(--line);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); height: var(--nav-h); }
+    .nav-link {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      min-height: var(--tap); min-width: var(--tap);
+      color: var(--ink-sub); text-decoration: none; font-size: 13px; font-weight: 700; line-height: 1.3;
+    }
+    .nav-link .nav-ico { font-size: 20px; line-height: 1; }
+    .nav-link[aria-current="page"] { color: var(--ink); background: #f5f0e8; }
+
+    /* ===== ダイアログ ===== */
+    .app-dialog { border: none; padding: 0; background: transparent; max-width: calc(100vw - 32px); width: 24rem; }
+    .app-dialog::backdrop { background: rgba(28, 25, 23, 0.5); }
+    .dialog-fallback-backdrop {
+      position: fixed; inset: 0; z-index: 90; background: rgba(28, 25, 23, 0.5);
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    .dialog-box {
+      background: var(--surface); border-radius: var(--radius-lg); padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); width: 100%; max-width: 24rem;
+    }
+    .dialog-box h2 { font-size: 18px; font-weight: 700; color: var(--ink); }
+    .dialog-msg { margin-top: 8px; font-size: 15px; color: var(--ink-2); white-space: pre-line; overflow-wrap: anywhere; }
+    .dialog-actions { margin-top: 16px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+    .dialog-actions .btn { flex: 1 1 120px; }
+
+    /* ===== ボトムシート（下から出る。動きはここだけ） ===== */
+    .sheet-backdrop { position: fixed; inset: 0; z-index: 80; background: rgba(28, 25, 23, 0.45); }
+    .sheet {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 81;
+      max-height: 88vh; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+      background: var(--surface); border-radius: 22px 22px 0 0;
+      padding: 8px 16px calc(24px + env(safe-area-inset-bottom));
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15);
+      transform: translateY(0); transition: transform 0.25s ease-out;
+    }
+    .sheet.is-entering { transform: translateY(100%); }
+    .sheet-inner { max-width: 28rem; margin: 0 auto; }
+    .sheet-handle { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 4px auto 8px; }
+    .sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .sheet-head h2 { font-size: 18px; font-weight: 700; color: var(--ink); line-height: 1.5; padding-top: 6px; }
+    .sheet-body { margin-top: 8px; }
+    .sheet-body > * + * { margin-top: 12px; }
+    .meta-list { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; }
+    .meta-list dt { color: var(--ink-sub); }
+    .meta-list dd { margin: 0; color: var(--ink-2); overflow-wrap: anywhere; }
+    .rec-block { border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 12px; }
+    .rec-block > * + * { margin-top: 10px; }
+    .fix-box summary {
+      display: flex; align-items: center; min-height: var(--tap); cursor: pointer;
+      font-size: 14px; font-weight: 700; color: var(--ink-2);
+    }
+    .fix-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+    .fix-btn { justify-content: flex-start; font-size: 15px; padding: 8px 12px; }
+
+    /* ===== 色見本 ===== */
+    .swatch { display: inline-block; width: 28px; height: 28px; border-radius: 8px; flex: 0 0 auto; border: 1px solid rgba(0, 0, 0, 0.08); vertical-align: middle; }
+    .swatch-sm { width: 18px; height: 18px; border-radius: 5px; margin-right: 6px; }
+    .swatch-pending { background: var(--pending-fill); border: 2px dashed var(--pending-line); }
+
+    /* ===== バックアップ ===== */
+    .file-label { position: relative; }
+    .file-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+    .file-input:focus-visible + .file-label { outline: 3px solid var(--accent); outline-offset: 2px; }
+    .switch-row { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 4px 0; cursor: pointer; }
+    .switch-row input { width: 24px; height: 24px; flex: 0 0 auto; accent-color: var(--ink); margin: 0; }
+    .switch-row span { font-size: 15px; color: var(--ink-2); }
+    .fallback-text {
+      display: block; width: 100%; min-height: 140px; font-size: 16px; font-family: ui-monospace, Menlo, monospace;
+      border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: var(--bg); color: var(--ink);
+    }
+
+    .toast {
+      position: fixed; left: 16px; right: 16px; z-index: 95;
+      bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));
+      max-width: 26rem; margin: 0 auto; padding: 12px 16px; border-radius: var(--radius);
+      background: var(--ink); color: #ffffff; font-size: 15px; text-align: center;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ===== きろく ===== */
+    .field-label { display: block; font-size: 15px; font-weight: 700; color: var(--ink); }
+    .textarea {
+      display: block; width: 100%; min-height: 160px; resize: vertical;
+      font-size: 16px; line-height: 1.7; padding: 12px; border-radius: var(--radius);
+      border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+    }
+    .textarea.judge-in { min-height: 100px; }
+    .textarea[aria-invalid="true"] { border-color: var(--err); }
+    .field-foot { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+    .field-err { font-size: 14px; color: var(--err); font-weight: 700; }
+    .field-err:empty { display: none; }
+    .counter { font-size: 13px; color: var(--ink-sub); white-space: nowrap; margin-left: auto; }
+    .counter.is-over { color: var(--err); font-weight: 700; }
+    .judge > * + * { margin-top: 10px; }
+    .judge-steps { margin: 0; padding-left: 22px; font-size: 14px; color: var(--ink-2); }
+    .judge-status { font-size: 14px; color: var(--ink); font-weight: 700; }
+    .judge-status:empty { display: none; }
+    .judge-status.is-err { color: var(--err); }
+    .done-box { background: var(--ok-bg); color: var(--ok-ink); border-radius: var(--radius); padding: 12px; font-size: 15px; font-weight: 700; }
+    .pending-list { list-style: none; margin: 0; padding: 0; }
+    .pending-list li + li { margin-top: 8px; }
+    .pending-btn {
+      display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 8px 12px;
+      text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; cursor: pointer;
+    }
+    .pending-main { flex: 1 1 auto; min-width: 0; }
+    .pending-date { font-size: 13px; color: var(--ink-sub); }
+    .pending-text { font-size: 14px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pending-go { font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+
+    /* ===== カレンダー ===== */
+    .mood-box {
+      position: relative; width: 100%; height: 96px; border-radius: var(--radius);
+      overflow: hidden; background: var(--bg); border: 1px solid var(--line-soft);
+    }
+    .mood-box canvas { width: 100%; height: 100%; }
+    .mood-label {
+      position: absolute; left: 10px; bottom: 8px; padding: 2px 10px; border-radius: 999px;
+      background: rgba(255, 255, 255, 0.94); color: var(--ink); font-size: 13px; font-weight: 700;
+    }
+    .cal-card { padding: 12px 6px; }
+    .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px; }
+    .cal-title { font-size: 18px; font-weight: 700; color: var(--ink); text-align: center; flex: 1 1 auto; }
+    .cal-today-row { display: flex; justify-content: center; }
+    .cal-today-btn { min-height: var(--tap); padding: 6px 16px; font-size: 14px; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+    .cal-wd { text-align: center; font-size: 12px; font-weight: 700; color: var(--ink-sub); padding: 2px 0; }
+    .cal-wd.is-sun { color: #b91c1c; }
+    .cal-wd.is-sat { color: #1d4ed8; }
+    .cal-cell {
+      position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px;
+      min-height: 58px; min-width: var(--tap); padding: 4px 0; cursor: pointer;
+      background: var(--surface); border: 1px solid var(--line-soft); border-radius: 10px;
+    }
+    .cal-num { font-size: 13px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+    .cal-dot { width: 22px; height: 22px; border-radius: 50%; }
+    .cal-dot.is-pending { background: var(--pending-fill); border: 2px dashed var(--pending-line); }
+    .cal-plus { position: absolute; bottom: 2px; right: 3px; font-size: 12px; font-weight: 700; color: var(--ink); line-height: 1.2; }
+    .cal-cell.has-pending { border: 2px dashed var(--pending-line); }
+    .cal-cell.is-today { box-shadow: inset 0 0 0 2px var(--ink); }
+    .cal-blank { min-height: 58px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 13px; color: var(--ink-sub); }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend .swatch { width: 16px; height: 16px; border-radius: 50%; }
+    .backup-row { display: flex; justify-content: center; }
+
+    /* ===== 幅360px以下 ===== */
+    @media (max-width: 360px) {
+      main.app-main { padding-left: 12px; padding-right: 12px; }
+      .card { padding: 14px; }
+      .cal-card { padding: 10px 3px; }
+      .cal-grid { gap: 2px; }
+      .fix-grid { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    /* ===== 動きを減らす設定 ===== */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+      }
+      .sheet { transition: none; }
+    }
+    /* ===== 動き（動きの名前24：リップル／ローディングボタン／スプリング／コンフェッティ／シェイク／スタッガー） ===== */
+    .btn, .nav-link, .drawer-item, .btn-icon, .pending-btn { position: relative; overflow: hidden; }
+    .ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.45); transform: scale(0); animation: rippleOut 0.55s ease-out forwards; pointer-events: none; }
+    .btn-secondary .ripple, .nav-link .ripple, .drawer-item .ripple, .btn-icon .ripple, .pending-btn .ripple { background: rgba(120,100,60,0.22); }
+    @keyframes rippleOut { to { transform: scale(1); opacity: 0; } }
+    @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 60% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    .is-pop { animation: popIn 0.45s cubic-bezier(0.34, 1.4, 0.64, 1); }
+    @keyframes shakeX { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-6px); } 40%, 60% { transform: translateX(6px); } }
+    .is-shake { animation: shakeX 0.4s ease-in-out; }
+    @keyframes spinAround { to { transform: rotate(360deg); } }
+    .btn.is-busy::before { content: ''; width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); border-top-color: #ffffff; animation: spinAround 0.6s linear infinite; }
+    .btn.is-done { animation: popIn 0.4s cubic-bezier(0.34, 1.4, 0.64, 1); }
+    @keyframes growX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    .long-band span { transform-origin: left; animation: growX 0.5s cubic-bezier(0.34, 1.3, 0.64, 1) both; animation-delay: calc(var(--i, 0) * 90ms); }
+    .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 120; }
+    .confetti-piece { position: absolute; width: 8px; height: 12px; border-radius: 2px; animation: confettiOut 1s ease-out forwards; }
+    @keyframes confettiOut { from { transform: translate(0, 0) rotate(0); opacity: 1; } to { transform: translate(var(--dx), calc(var(--dy) + 80px)) rotate(var(--rot)); opacity: 0; } }
+    .long-period { margin-top: 14px; }
+    .ribbon { position: relative; margin-top: 10px; }
+    .ribbon-rows { position: relative; margin-left: 30px; }
+    .ribbon-row { position: absolute; left: 0; right: 0; border-bottom: 0; }
+    .ribbon-name { position: absolute; left: -30px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--ink-2); }
+    .ribbon-dot { position: absolute; width: 16px; height: 16px; border-radius: 50%; transform: translate(-50%, -50%); filter: blur(1.5px); transition: opacity 0.3s; animation: ribbonIn 0.8s ease-out both; }
+    @keyframes ribbonIn { from { transform: translate(-50%, -50%) scale(0.3); } to { transform: translate(-50%, -50%) scale(1); } }
+    .ribbon-ticks { position: relative; margin-left: 30px; height: 18px; margin-top: 4px; }
+    .ribbon-ticks span { position: absolute; transform: translateX(-50%); font-size: 11px; color: var(--ink-sub); white-space: nowrap; }
+    .ribbon-caption { font-size: 12px; color: var(--ink-sub); margin: 8px 0 0; }
+    .long-cal { display: grid; grid-template-columns: 52px repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 8px; align-items: center; }
+    .long-cal-wd { font-size: 12px; color: var(--ink-sub); text-align: center; }
+    .long-cal-label { font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+    .long-cal-day { aspect-ratio: 1 / 1; border-radius: 8px; background: #f0eee9; font-size: 12px; display: flex; align-items: center; justify-content: center; color: var(--ink-2); }
+    .long-cal-day.is-blank { background: transparent; }
+    .long-cal-day.is-future { background: transparent; color: #a8a29e; border: 1px dashed #d6d3d1; }
+    .long-cal-day.is-white { color: #ffffff; }
+    .long-summary { margin-top: 10px; }
+    .long-summary p { font-size: 13px; color: var(--ink-2); margin: 4px 0; }
+    .long-bar { display: flex; height: 22px; border-radius: 11px; overflow: hidden; background: var(--pending-fill); }
+    .long-bar span { display: block; height: 100%; transform-origin: left; animation: growX 0.5s cubic-bezier(0.34, 1.3, 0.64, 1) both; animation-delay: calc(var(--i, 0) * 90ms); }
+    .long-sentence { font-size: 13px; color: var(--ink-2); margin: 6px 0 0; }
+    .long-dots { display: grid; gap: 4px 6px; justify-items: center; margin-top: 4px; }
+    .long-dot { width: 44px; height: 44px; background: none; border: 0; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; animation: dotIn 0.5s ease-out both; animation-delay: calc(var(--i, 0) * 45ms); }
+    .long-dot-inner { display: block; width: 22px; height: 22px; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    .long-gap { display: block; width: 44px; height: 44px; }
+    @keyframes dotIn { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: none; } }
+    .long-detail { margin-top: 12px; }
+    .long-detail-head { font-size: 13px; color: var(--ink-sub); margin: 0 0 4px; }
+    .long-title { font-weight: 700; color: var(--ink); margin: 0; font-size: 16px; }
+    .long-row { margin-top: 12px; }
+    .long-label { font-size: 13px; color: var(--ink-sub); margin: 0 0 4px; }
+    .long-band { display: flex; height: 18px; border-radius: 9px; overflow: hidden; background: var(--pending-fill); }
+    .long-band span { display: block; height: 100%; }
+    .long-few { font-size: 13px; color: var(--ink-sub); margin: 0; }
+    .long-note { font-size: 12px; color: var(--ink-sub); margin: 12px 0 0; }
+    .menu-btn { margin-left: 8px; }
+    .header-end { display: flex; align-items: center; }
+    .drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 55; }
+    .drawer { position: fixed; top: 0; bottom: 0; right: 0; width: min(78vw, 300px); background: #fff; z-index: 60; box-shadow: -4px 0 16px rgba(0,0,0,0.15); }
+    .drawer:not([hidden]) { animation: drawerIn 0.25s ease-out; }
+    @keyframes drawerIn { from { transform: translateX(100%); } to { transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .drawer:not([hidden]) { animation: none; } }
+    .drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+    .drawer-title { margin: 0; font-weight: 700; color: var(--ink); }
+    .drawer-item { display: block; width: 100%; text-align: left; padding: 16px; min-height: var(--tap); background: none; border: 0; font-size: 16px; color: var(--ink); cursor: pointer; }
+    .export-note { font-size: 14px; color: var(--ink-2); }
+  
+  .wave-fig { margin: 6px 0 2px; }
+  .wave-axis { display: flex; justify-content: space-between; font-size: 12px; opacity: .7; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+  <a class="sr-only" href="#app-main">本文へ移動</a>
+  <header class="app-header">
+    <div class="wrap header-row">
+      <div>
+        <h1 class="app-title">夢と心のいろ帖</h1>
+        <p class="app-sub" id="today-label"></p>
+      </div>
+      <div class="header-end">
+        <div class="chip"><span class="chip-dot" aria-hidden="true"></span><span id="header-count">計 0 夜</span></div>
+        <button type="button" class="btn-icon menu-btn" id="menu-open" aria-label="メニューを開く" aria-controls="drawer">≡</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="app-main" class="app-main" tabindex="-1">
+    <div class="wrap">
+      <div id="notices" class="notices" aria-live="polite"></div>
+
+      <!-- ① きろく -->
+      <section id="screen-record" class="screen" aria-labelledby="record-h" hidden>
+        <div class="screen-head">
+          <h2 id="record-h">夢のきろく</h2>
+          <p>朝、見た夢を書きとめる手帳です。記録はこのスマホの中だけに残ります。</p>
+        </div>
+        <div class="card" id="mood-card">
+          <h3 class="card-title">直近5夜の心の動き</h3>
+          <div class="mood-box">
+            <canvas id="mood-canvas" aria-hidden="true"></canvas>
+            <div class="mood-label" id="mood-label">記録が足りません</div>
+          </div>
+          <p class="text-xs" id="mood-basis"></p>
+        </div>
+
+        <form id="record-form" class="card" novalidate>
+          <p class="text-body" id="record-date"></p>
+          <label for="rec-text" class="field-label">見た夢</label>
+          <p class="text-xs">覚えている情景や気持ちを、そのまま書いてください（2000文字まで）。</p>
+          <textarea id="rec-text" class="textarea" maxlength="2000" rows="6"
+            placeholder="例：夜の街で迷っていたが、最後は朝の光に包まれて安心した" aria-describedby="rec-count rec-text-err"></textarea>
+          <div class="field-foot">
+            <p id="rec-text-err" class="field-err" aria-live="polite"></p>
+            <span id="rec-count" class="counter">0 / 2000</span>
+          </div>
+          <p class="text-xs" id="rec-note">色は文章の言葉から決めた目安です。診断や心の状態の評価ではありません。違うときは色を直せます。</p>
+          <button type="submit" class="btn btn-primary btn-block" id="rec-save">保存する</button>
+          <p id="rec-save-err" class="field-err" aria-live="polite"></p>
+        </form>
+
+        <div class="card" id="rec-after" tabindex="-1" hidden></div>
+
+        <div class="card" id="pending-card" hidden>
+          <h3 class="card-title">色がまだの記録</h3>
+          <p class="text-xs">押すと、その記録に色をつけられます。</p>
+          <ul class="pending-list" id="pending-list"></ul>
+          <p class="text-xs" id="pending-more" hidden></p>
+        </div>
+      </section>
+
+      <!-- メニューから開くエクスポート -->
+      <section id="screen-export" class="screen" aria-labelledby="export-h" hidden>
+        <h2 id="export-h" class="sr-only">エクスポート</h2>
+        <div class="card">
+          <p class="card-title">過去の記録を保存する</p>
+          <p class="export-note" id="export-count"></p>
+          <p class="export-note">保存したファイルは、あとで読み戻すときに使います。端末の外には送られません。</p>
+          <button type="button" class="btn btn-primary btn-block" id="export-json">そのままのデータで保存（.json）</button>
+          <button type="button" class="btn btn-secondary btn-block" id="export-readable">読みやすい文章で保存（.txt）</button>
+          <p class="text-xs" id="export-status" aria-live="polite"></p>
+          <div id="export-page-fallback" hidden>
+            <p class="text-xs">ファイルを保存できないときは、下の文字をすべてコピーして、メモなどに保存してください。</p>
+            <textarea id="export-page-fallback-text" class="fallback-text" readonly aria-label="エクスポートの文字"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- ③ 長期記録 -->
+      <section id="screen-long" class="screen" aria-labelledby="long-h" hidden>
+        <h2 id="long-h" class="sr-only">長期記録</h2>
+        <div class="card long-card" id="long-card">
+          <p class="long-title">夢の色の傾向（文章からの目安）</p>
+          <div class="long-row" id="long-week-body"></div>
+          <div class="long-row">
+            <p class="long-label" id="long-month-label">直近30日の波</p>
+            <div id="long-month-body"></div>
+          </div>
+          <p class="long-note">夢の言葉の傾向であり、気分や体調の評価ではありません。色は文章の言葉から決めた目安です。</p>
+        </div>
+      </section>
+
+      <!-- ② カレンダー -->
+      <section id="screen-calendar" class="screen" aria-labelledby="calendar-h" hidden>
+        <h2 id="calendar-h" class="sr-only">カレンダー</h2>
+        <div class="card cal-card">
+          <div class="cal-head">
+            <button type="button" class="btn-icon" id="cal-prev" aria-label="前の月">＜</button>
+            <p class="cal-title" id="cal-title" aria-live="polite"></p>
+            <button type="button" class="btn-icon" id="cal-next" aria-label="次の月">＞</button>
+          </div>
+          <div class="cal-today-row">
+            <button type="button" class="btn btn-secondary cal-today-btn" id="cal-today">今日に戻る</button>
+          </div>
+          <div class="cal-grid" id="cal-weekdays" aria-hidden="true"></div>
+          <div class="cal-grid" id="cal-grid"></div>
+          <div class="legend" id="cal-legend"></div>
+        </div>
+
+        <div class="backup-row">
+          <button type="button" class="link-btn" id="backup-open">バックアップ</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <nav class="app-nav" aria-label="画面の切り替え">
+    <div class="wrap nav-grid">
+      <a class="nav-link" href="#record" data-nav="record"><span class="nav-ico" aria-hidden="true">📝</span><span>きろく</span></a>
+      <a class="nav-link" href="#long" data-nav="long"><span class="nav-ico" aria-hidden="true">📈</span><span>長期記録</span></a>
+      <a class="nav-link" href="#calendar" data-nav="calendar"><span class="nav-ico" aria-hidden="true">📅</span><span>カレンダー</span></a>
+    </div>
+  </nav>
+
+  <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+  <aside id="drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-h" hidden>
+    <div class="drawer-head">
+      <p id="drawer-h" class="drawer-title">メニュー</p>
+      <button type="button" class="btn-icon" id="menu-close" aria-label="メニューを閉じる">✕</button>
+    </div>
+    <button type="button" class="drawer-item" id="drawer-export">エクスポート（過去の記録を保存）</button>
+  </aside>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
+  <div id="sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1" hidden>
+    <div class="sheet-inner">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-head">
+        <h2 id="sheet-title">詳しく</h2>
+        <button type="button" class="btn-icon" id="sheet-close" aria-label="閉じる">×</button>
+      </div>
+      <div class="sheet-body" id="sheet-body"></div>
+    </div>
+  </div>
+
+  <div id="dialog-host"></div>
+
+  <script>
+'use strict';
+(function () {
+  // =========================================================
+  // 共通基盤：定数
+  // =========================================================
+  var APP_NAME = '夢と心のいろ帖';
+  var SCHEMA_VERSION = 1;
+  var params;
+  try { params = new URLSearchParams(window.location.search); } catch (e) { params = { get: function () { return null; } }; }
+  var SANDBOX = params.get('sandbox') === '1';
+  // 保存キーと記録の形は既存版と同じ（変えない）
+  var KEY = SANDBOX ? 'dream_records_sandbox' : 'dream_records_v2_test';
+  var META_KEY = SANDBOX ? 'dream_meta_sandbox' : 'dream_meta';
+  var MAX_TEXT = 2000;
+  var MAX_IMPORT_BYTES = 5 * 1024 * 1024;
+  var BACKUP_REMIND_DAYS = 7;
+  var PENDING_LIST_MAX = 5;
+  // 夢の文章から4色を決める辞書ルール（判定の本体）
+  var DreamJudge = (function () {
+// 夢の文章 → 4色（warm暖/bright明/cool冷/dark暗）の辞書ルール判定（案v1）
+
+// 感情語（1点）
+const EMO = {
+  warm:   ['嬉し','うれし','楽し','たのし','感動','わくわく','ワクワク','歓声','胸が高鳴','最高','幸せ','興奮','笑','大喜び','喜','はしゃ','ときめ'],
+  bright: ['安心','ほっと','ホッと','希望','救われ','助かっ','満ち足り','満たされ','温かい','温かく','暖かい','暖かく','あたたか','体が軽','懐かし','安堵','気持ちい','気持ちよ','爽やか','心地'],
+  cool:   ['静か','穏やか','おだやか','ぼんやり','淡々','寂し','さびし','凪','しんみり','落ち着い','落ち着く','のんびり','ゆったり','平和','いつも通り'],
+  dark:   ['怖','恐','不安','焦','心配','必死','パニック','絶望','苦し','悲し','動悸','冷や汗','息苦し','金縛り']
+};
+// 多義の身体語：同じ文に感情語があるときだけ、その感情語の色に1点足す
+const AMBIG = ['涙','震え','ドキドキ','どきどき','胸が熱','鳥肌'];
+// 場面語（0.5点）
+const SCENE = {
+  warm:   ['祭','花火','再会'],
+  bright: ['光','朝日','日差し','陽','晴れ','虹'],
+  cool:   ['霧','雨','湖','海','川','月'],
+  dark:   ['追わ','逃げ','逃走','落ち','落下','動けな','暗い','暗闇','闇','閉じ込','迷子','迷っ','締切','遅刻','崖','怪物','化け物','鬼']
+};
+const NEG_TAIL  = /^(?:は|も)?(?:ない|なかった|なく|ません)/;
+const DOUBLE_NEG = /^(?:は|も)?(?:ない|なく)(?:わけ|こと)(?:では|も)(?:ない|なかった)/;
+const POS_FAIL  = /^(?:は|も)?(?:できなかった|できず|できない|なれなかった|なかった|ない)/;
+const THIRD = /(母|父|友達|友人|彼女|彼|子ども|子供|誰か|みんな)[がは]/;
+const FIRST = /(私|わたし|自分|僕|俺)/;
+const FEARSET = ['怖','不安','心配'];
+const STRONG = ['動悸','冷や汗','息苦し','金縛り'];
+
+function sentences(t){ return t.split(/[。！？!?\n]+/).map(s=>s.trim()).filter(Boolean); }
+function lastClause(t){ const s = sentences(t); const l = s[s.length-1]||''; const c = l.split(/[、,]|(?:だった|した|たり|た)が|けど|けれど|のに/); return c[c.length-1]; }
+
+function judge(text){
+  const t = text.normalize('NFKC');
+  const score = {warm:0,bright:0,cool:0,dark:0};
+  const words = {warm:[],bright:[],cool:[],dark:[]};
+  const used = new Set();
+  const add = (c, key, label, pt) => { if(used.has(c+key)) return; used.add(c+key); score[c]+=pt; words[c].push(label+(pt<1?'(場面)':'')); };
+  const sents = sentences(t);
+  for (const sentence of sents){
+    const clauses = sentence.split(/[、,]/).filter(Boolean);
+    let sentEmoColors = [];
+    const s = sentence;
+    const otherOf = (w) => { const cl = clauses.find(x=>x.includes(w)) || sentence; return THIRD.test(cl) && !FIRST.test(sentence); };
+    for (const c of Object.keys(EMO)){
+      for (const w of EMO[c]){
+        let idx = s.indexOf(w);
+        if (idx < 0) continue;
+        // 活用の語尾を少し含めて打ち消しを調べる
+        let tail = s.slice(idx + w.length);
+        const conj = tail.match(/^(?:い|く|かった|しい|しく|しかった|て|だった)?/)[0];
+        tail = tail.slice(conj.length);
+        if (otherOf(w)) continue;                          // 他人の感情は数えない（その語がある節の主語で判断）
+        if (DOUBLE_NEG.test(tail)) { add(c, w, w+'(二重否定)', 1); sentEmoColors.push(c); continue; }
+        if (NEG_TAIL.test(tail) || NEG_TAIL.test(conj)) {
+          if (c==='dark' && FEARSET.includes(w)) add('bright', w+'neg', w+'ない', 1); // 「怖くなかった」→明
+          continue;
+        }
+        if ((c==='warm'||c==='bright') && POS_FAIL.test(tail)) { add('dark', w+'fail', w+'できない', 1); continue; }
+        if (/(はずが|わけが)ない/.test(tail)) continue;    // 皮肉は数えない
+        add(c, w, w, STRONG.includes(w) ? 1.5 : 1); sentEmoColors.push(c);
+      }
+    }
+    if (sentEmoColors.length){
+      const top = sentEmoColors.sort((a,b)=>sentEmoColors.filter(x=>x===b).length - sentEmoColors.filter(x=>x===a).length)[0];
+      for (const w of AMBIG) if (s.includes(w)) add(top, w, w+'(感情語と共に)', 1);
+    }
+  }
+  for (const c of Object.keys(SCENE)) { const hit = SCENE[c].filter(w=>t.includes(w)); if (hit.length) add(c, 'scene', hit.join('・'), 0.5); }
+  const order = Object.keys(score).sort((a,b)=>score[b]-score[a]);
+  const [a,b] = order;
+  if (score[a] === 0 || !Object.values(words).flat().some(x=>!x.includes('(場面)'))) return {color:null, conf:'判定なし', second:null, words, score};  // 場面の言葉だけでは決めない
+  let color = a, conf, second = null, tie = false;
+  const margin = score[a] - score[b];
+  if (margin < 0.01){
+    tie = true;
+    const lc = lastClause(t).normalize('NFKC');
+    const cnt = c => EMO[c].filter(w=>lc.includes(w)).length;
+    const tied = order.filter(c=>Math.abs(score[c]-score[a])<0.01);
+    const best = tied.slice().sort((x,y)=>cnt(y)-cnt(x));
+    if (cnt(best[0]) > cnt(best[1]||best[0])) color = best[0]; else return {color:null, conf:'混ざる', mixed:[tied[0],tied[1]], second:tied[1], words, score};
+    conf = '低'; second = tied.find(c=>c!==color);
+  } else {
+    conf = margin >= 2 ? '高' : margin >= 1 ? '中' : '低';
+    if (score[a] < 1) conf = '低';
+    if (margin <= 1 && score[b] > 0) second = b;
+  }
+  return {color, conf, second, words, score, tie};
+}
+
+
+    return { judge: judge, NAMES_JA: { warm: '暖', bright: '明', cool: '冷', dark: '暗' } };
+  })();
+  var NOTE_TEXT = 'この色は夢の文章からの簡易的な目安であり、診断や心の状態の評価ではありません。実際の感じ方と違うときは色を直してください。';
+
+  // 色の定義。新しい記録で使うのは4色（coral/gold/sky/indigo）。
+  // gray・moss は過去の版の記録を読むためだけに残す（画面では「再判定待ち」）。pending は色がまだの記録。
+  var PALETTES = {
+    coral:   { id: 'coral',   short: '暖', meaning: '高揚・喜び・感動',               score: 90, gradient: ['#d9787a', '#e8a48f'] },
+    gold:    { id: 'gold',    short: '明', meaning: '安心・希望・満ち足り',           score: 75, gradient: ['#dcbc6a', '#e9d28f'] },
+    sky:     { id: 'sky',     short: '冷', meaning: '静けさ・安らぎ・平常・淡い寂しさ', score: 60, gradient: ['#8dbcd2', '#a6d2e0'] },
+    indigo:  { id: 'indigo',  short: '暗', meaning: '不安・恐れ・焦り・負荷・強い緊張', score: 10, gradient: ['#5a5e8c', '#777cad'] },
+    gray:    { id: 'gray',    short: '再判定待ち', legacy: true, score: 40, gradient: ['#64748b', '#94a3b8'] },
+    moss:    { id: 'moss',    short: '再判定待ち', legacy: true, score: 25, gradient: ['#047857', '#10b981'] },
+    pending: { id: 'pending', short: '判定待ち', name: '判定待ち', score: null, gradient: ['#e7e5e4', '#e7e5e4'] }
+  };
+  var COLOR_ORDER = ['coral', 'gold', 'sky', 'indigo'];
+  var DEFAULT_COLORS = ['#94a3b8', '#cbd5e1'];
+
+  // 過去の版が初回に自動で入れていた見本12件の文面（これと完全一致する記録に印を付ける）
+  var MOCK_TEXTS = [
+    'とても明るい空を自由に飛んでいる楽しい夢',
+    '暗い森の中で何かから必死に逃げて焦った',
+    '海に潜って美しい魚を見た',
+    '霧の中で道に迷い、不安だったが静かだった',
+    '暖かい日差しの下で昔の友人と笑い合った',
+    '仕事の書類が終わらず焦る、色はグレーっぽかった',
+    '月が綺麗な夜に、静かな湖畔を歩いていた',
+    '高いところから落ちる感覚でハッと目が覚めた',
+    '朝日が差し込む部屋で本を読んでいた',
+    '暗い部屋に閉じ込められたが、不思議と落ち着いていた',
+    '綺麗な川で水遊びをする、冷たくて気持ちよかった',
+    '空がピンク色に染まっていて、とても感動した'
+  ];
+
+  // 心の動き：しきい値は1か所にまとめる（色の score の振れ幅）
+  var MOOD_WINDOW = 5;
+  var MOOD_MIN_NIGHTS = 2;
+  var MOOD_THRESHOLDS = [
+    { below: 15,       level: 1, label: '落ち着いている' },
+    { below: 35,       level: 2, label: 'ゆらぎがある' },
+    { below: 55,       level: 3, label: '動きがある' },
+    { below: Infinity, level: 4, label: '大きく動いている' }
+  ];
+
+  // =========================================================
+  // 共通基盤：小さな道具
+  // =========================================================
+  function $(id) { return document.getElementById(id); }
+
+  // 要素を作る。文字は必ず textContent / テキストノードで入れる
+  function el(tag, props) {
+    var e = document.createElement(tag);
+    setProps(e, props);
+    for (var i = 2; i < arguments.length; i++) appendChild(e, arguments[i]);
+    return e;
+  }
+  function setProps(e, props) {
+    if (!props) return;
+    Object.keys(props).forEach(function (k) {
+      var v = props[k];
+      if (v === null || v === undefined || v === false) return;
+      if (k === 'text') e.textContent = String(v);
+      else if (k === 'class') e.setAttribute('class', v);
+      else if (k.indexOf('on') === 0 && typeof v === 'function') e.addEventListener(k.slice(2), v);
+      else e.setAttribute(k, v === true ? '' : String(v));
+    });
+  }
+  function appendChild(e, c) {
+    if (c === null || c === undefined || c === false) return;
+    if (Array.isArray(c)) { c.forEach(function (x) { appendChild(e, x); }); return; }
+    e.appendChild(c instanceof Node ? c : document.createTextNode(String(c)));
+  }
+  function clear(node) { while (node && node.firstChild) node.removeChild(node.firstChild); }
+
+  // 種を固定した疑似乱数（帯の点の並びを毎回同じにするため。Math.random は使わない）
+  function mulberry32(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function todayYMD(d) {
+    d = d || new Date();
+    return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate();
+  }
+  function parseYMD(s) {
+    if (typeof s !== 'string') return null;
+    var m = /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(s.trim());
+    if (!m) return null;
+    var y = +m[1], mo = +m[2], da = +m[3];
+    var d = new Date(y, mo - 1, da);
+    if (d.getFullYear() !== y || d.getMonth() !== mo - 1 || d.getDate() !== da) return null;
+    return d;
+  }
+  function jpDate(d) { return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日'; }
+  function gradientCss(p) { return 'linear-gradient(135deg, ' + p.gradient[0] + ', ' + p.gradient[1] + ')'; }
+
+  // =========================================================
+  // 共通基盤：データ層
+  // =========================================================
+  // 記録1件を検査する。使えない記録は null（表示から外す。保存データからは消さない）
+  function validateRecord(r) {
+    if (!r || typeof r !== 'object' || Array.isArray(r)) return null;
+    var idOk = (typeof r.id === 'number' && isFinite(r.id)) || (typeof r.id === 'string' && r.id.trim() !== '');
+    if (!idOk) return null;
+    var d = parseYMD(r.date);
+    if (!d) return null;
+    if (typeof r.text !== 'string') return null;
+    if (!Object.prototype.hasOwnProperty.call(PALETTES, r.paletteId)) return null;
+    var isPending = r.paletteId === 'pending';
+    if (isPending) {
+      if (r.score !== null && r.score !== undefined && (typeof r.score !== 'number' || !isFinite(r.score))) return null;
+    } else if (typeof r.score !== 'number' || !isFinite(r.score)) return null;
+    return {
+      id: r.id,
+      key: String(r.id),
+      date: r.date,
+      time: d.getTime(),
+      text: r.text,
+      paletteId: r.paletteId,
+      score: isPending ? null : Math.max(0, Math.min(100, r.score)),
+      title: typeof r.title === 'string' ? r.title : '',
+      analysis: typeof r.analysis === 'string' ? r.analysis : '',
+      isSample: MOCK_TEXTS.indexOf(r.text) !== -1
+    };
+  }
+
+  function compareRecords(a, b) {
+    if (a.time !== b.time) return a.time - b.time;
+    var an = typeof a.id === 'number', bn = typeof b.id === 'number';
+    if (an && bn) return a.id - b.id;
+    if (an !== bn) return an ? -1 : 1;
+    return a.key < b.key ? -1 : (a.key > b.key ? 1 : 0);
+  }
+
+  // 保存データを読む。壊れていても止まらず、元の文字列には書き込まない
+  function readStore() {
+    var res = { raw: [], valid: [], invalidCount: 0, broken: false, brokenReason: '', rawString: null, unavailable: false };
+    var s;
+    try { s = window.localStorage.getItem(KEY); } catch (e) { res.unavailable = true; return res; }
+    if (s === null || s === undefined) return res;
+    res.rawString = s;
+    var data;
+    try { data = JSON.parse(s); } catch (e) {
+      res.broken = true; res.brokenReason = '文字の形が崩れています'; return res;
+    }
+    if (!Array.isArray(data)) {
+      res.broken = true;
+      res.brokenReason = data === null ? '中身が空です' : '記録の一覧の形ではありません';
+      return res;
+    }
+    res.raw = data;
+    for (var i = 0; i < data.length; i++) {
+      var v = validateRecord(data[i]);
+      if (v) res.valid.push(v); else res.invalidCount++;
+    }
+    res.valid.sort(compareRecords);
+    return res;
+  }
+
+  function writable(store) { return !store.broken && !store.unavailable; }
+  var BROKEN_MSG = '保存データが壊れているため、元のデータを守るために保存しません。カレンダー画面の下の「バックアップ」から、そのままの文字を保存してください。';
+
+  // 記録を足して保存する。保存の直前に読み直し、別のタブで増えた分も残す
+  function appendRecords(newRecs) {
+    var fresh = readStore();
+    if (fresh.unavailable) return { ok: false, msg: 'このブラウザでは保存できません（プライベートモードなどの可能性）。' };
+    if (fresh.broken) return { ok: false, msg: BROKEN_MSG };
+    var arr = fresh.raw.slice();
+    newRecs.forEach(function (r) { arr.push(r); });
+    try {
+      window.localStorage.setItem(KEY, JSON.stringify(arr));
+    } catch (e) {
+      return { ok: false, msg: '保存できませんでした。空き容量が足りない可能性があります。バックアップを保存してから、もう一度試してください。' };
+    }
+    state.store = readStore();
+    return { ok: true };
+  }
+
+  // 1件の記録の項目だけを書きかえる（他の記録には触れない）。失敗したら元のデータはそのまま
+  function updateRecordFields(key, fields) {
+    var fresh = readStore();
+    if (fresh.unavailable) return { ok: false, msg: 'このブラウザでは保存できません（プライベートモードなどの可能性）。' };
+    if (fresh.broken) return { ok: false, msg: BROKEN_MSG };
+    var idx = -1;
+    for (var i = 0; i < fresh.raw.length; i++) {
+      var r = fresh.raw[i];
+      if (r && typeof r === 'object' && (typeof r.id === 'number' || typeof r.id === 'string') && String(r.id) === key) { idx = i; break; }
+    }
+    if (idx === -1) return { ok: false, msg: 'この記録が見つかりませんでした（別の画面で変わった可能性があります）。' };
+    var arr = fresh.raw.slice();
+    var copy = {};
+    Object.keys(fresh.raw[idx]).forEach(function (k) { copy[k] = fresh.raw[idx][k]; });
+    Object.keys(fields).forEach(function (k) { copy[k] = fields[k]; });
+    arr[idx] = copy;
+    try {
+      window.localStorage.setItem(KEY, JSON.stringify(arr));
+    } catch (e) {
+      return { ok: false, msg: '保存できませんでした。空き容量が足りない可能性があります。' };
+    }
+    state.store = readStore();
+    return { ok: true };
+  }
+
+  function newId(raw) {
+    var used = {};
+    raw.forEach(function (r) { if (r && (typeof r.id === 'number' || typeof r.id === 'string')) used[String(r.id)] = true; });
+    var id = Date.now();
+    while (used[String(id)]) id++;
+    return id;
+  }
+
+  // 新しい記録は「判定待ち」で作る（形は既存の7項目そのまま）
+  function makePendingRecord(text, raw, dateStr) {
+    return { id: newId(raw), date: dateStr || todayYMD(), text: text, paletteId: 'pending', score: null, title: '色がまだの夢', analysis: '' };
+  }
+
+  // メタ情報（別キー）
+  function defaultMeta() { return { schemaVersion: SCHEMA_VERSION, excludeSamples: true, lastExportAt: null }; }
+  function readMeta() {
+    var m = defaultMeta(), ok = true, s = null;
+    try { s = window.localStorage.getItem(META_KEY); } catch (e) { return { meta: m, writable: false }; }
+    if (s === null) return { meta: m, writable: true, missing: true };
+    try {
+      var d = JSON.parse(s);
+      if (d && typeof d === 'object' && !Array.isArray(d)) {
+        if (typeof d.excludeSamples === 'boolean') m.excludeSamples = d.excludeSamples;
+        if (typeof d.lastExportAt === 'string' && !isNaN(Date.parse(d.lastExportAt))) m.lastExportAt = d.lastExportAt;
+      } else ok = false;
+    } catch (e) { ok = false; }
+    return { meta: m, writable: ok };
+  }
+  function saveMeta() {
+    if (!state.metaWritable) return false;
+    try { window.localStorage.setItem(META_KEY, JSON.stringify(state.meta)); return true; } catch (e) { return false; }
+  }
+
+  // 表示に使う記録（見本らしい記録を外す設定に従う）
+  function viewRecords() {
+    var v = state.store.valid;
+    return state.meta.excludeSamples ? v.filter(function (r) { return !r.isSample; }) : v.slice();
+  }
+  function sampleCount() { return state.store.valid.filter(function (r) { return r.isSample; }).length; }
+
+  // 表示用の色。データは書きかえず、見せるときに新しい4色へ置きかえる
+  function displayOf(r) {
+    var p = PALETTES[r.paletteId];
+    if (r.paletteId === 'pending') return { kind: 'pending', name: '判定待ち', desc: '色がまだです', p: null };
+    if (p && p.legacy) return { kind: 'rejudge', name: '再判定待ち', desc: '前の版の色のため、付け直し待ちです', p: null };
+    return { kind: 'judged', name: p.short, desc: p.meaning, p: p };
+  }
+  function isJudged(r) { return displayOf(r).kind === 'judged'; }
+
+  function daysSinceExport() {
+    if (!state.meta.lastExportAt) return null;
+    var ms = Date.now() - Date.parse(state.meta.lastExportAt);
+    return Math.max(0, Math.floor(ms / 86400000));
+  }
+  function exportStatusText() {
+    var d = daysSinceExport();
+    if (d === null) return 'まだ一度もバックアップを保存していません。';
+    if (d === 0) return '最後のバックアップ：今日';
+    return '最後のバックアップから ' + d + ' 日たっています。';
+  }
+  function exportRecommended() {
+    var d = daysSinceExport();
+    return state.store.valid.length > 0 && (d === null || d >= BACKUP_REMIND_DAYS);
+  }
+
+  // 戻すデータを調べる（重ね合わせ。同じidは飛ばす）
+  function parseImportText(text) {
+    var data;
+    try { data = JSON.parse(text); } catch (e) { return { error: 'このアプリのバックアップとして読めないファイルです。' }; }
+    var list = null;
+    if (Array.isArray(data)) list = data;
+    else if (data && typeof data === 'object' && Array.isArray(data.records)) list = data.records;
+    if (!list) return { error: 'このアプリのバックアップではないようです（記録の一覧が見つかりません）。' };
+    return { list: list };
+  }
+  function analyzeImport(list, existingRaw) {
+    var used = {};
+    existingRaw.forEach(function (r) { if (r && (typeof r.id === 'number' || typeof r.id === 'string')) used[String(r.id)] = true; });
+    var toAdd = [], dup = 0, invalid = 0;
+    list.forEach(function (r) {
+      var v = validateRecord(r);
+      if (!v) { invalid++; return; }
+      if (used[v.key]) { dup++; return; }
+      used[v.key] = true;
+      toAdd.push({
+        id: r.id, date: r.date, text: r.text, paletteId: r.paletteId,
+        score: r.paletteId === 'pending' ? null : r.score,
+        title: typeof r.title === 'string' ? r.title : '',
+        analysis: typeof r.analysis === 'string' ? r.analysis : ''
+      });
+    });
+    return { toAdd: toAdd, dup: dup, invalid: invalid };
+  }
+
+  // =========================================================
+  // 共通基盤：画面の部品（トースト・ダイアログ・ボトムシート）
+  // =========================================================
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.hidden = false;
+    playAnim(t, 'is-pop', 500);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.hidden = true; }, 3500);
+  }
+
+  var FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
+  function focusables(container) {
+    return Array.prototype.filter.call(container.querySelectorAll(FOCUSABLE), function (n) {
+      return !n.hidden && n.getAttribute('aria-hidden') !== 'true' && n.offsetParent !== null;
+    });
+  }
+  function trapTab(container, e) {
+    if (e.key !== 'Tab') return;
+    var list = focusables(container);
+    if (list.length === 0) { e.preventDefault(); container.focus(); return; }
+    var first = list[0], last = list[list.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !container.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (document.activeElement === last || !container.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+  }
+  function setBackgroundInert(on) {
+    var nodes = [document.querySelector('.app-header'), $('app-main'), document.querySelector('.app-nav')];
+    nodes.forEach(function (n) {
+      if (!n) return;
+      if (on) { n.setAttribute('inert', ''); n.setAttribute('aria-hidden', 'true'); }
+      else { n.removeAttribute('inert'); n.removeAttribute('aria-hidden'); }
+    });
+  }
+
+  // ---- ダイアログ（alert / confirm / prompt は使わない）----
+  var dialogApi = null;
+  function supportsDialog() {
+    try {
+      return typeof window.HTMLDialogElement === 'function' &&
+        typeof document.createElement('dialog').showModal === 'function';
+    } catch (e) { return false; }
+  }
+  function buildDialog() {
+    var host = $('dialog-host');
+    var title = el('h2', { id: 'dlg-title' });
+    var msg = el('p', { id: 'dlg-msg', class: 'dialog-msg' });
+    var cancel = el('button', { type: 'button', class: 'btn btn-secondary', id: 'dlg-cancel' }, 'やめる');
+    var ok = el('button', { type: 'button', class: 'btn btn-primary', id: 'dlg-ok' }, 'OK');
+    var box = el('div', { class: 'dialog-box' }, title, msg, el('div', { class: 'dialog-actions' }, cancel, ok));
+    var native = supportsDialog();
+    var root;
+    if (native) {
+      root = el('dialog', { class: 'app-dialog', 'aria-labelledby': 'dlg-title', 'aria-describedby': 'dlg-msg' }, box);
+    } else {
+      root = el('div', { class: 'dialog-fallback-backdrop', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'dlg-title', 'aria-describedby': 'dlg-msg', hidden: true, tabindex: '-1' }, box);
+    }
+    host.appendChild(root);
+    var resolver = null, returnFocus = null;
+    function finish(val) {
+      if (!resolver) return;
+      var r = resolver; resolver = null;
+      if (native) { try { if (root.open) root.close(); } catch (e) { /* なにもしない */ } }
+      else { root.hidden = true; if (!sheetIsOpen()) setBackgroundInert(false); }
+      if (returnFocus && document.contains(returnFocus) && typeof returnFocus.focus === 'function') { try { returnFocus.focus(); } catch (e) { /* なにもしない */ } }
+      r(val);
+    }
+    ok.addEventListener('click', function () { finish(true); });
+    cancel.addEventListener('click', function () { finish(false); });
+    root.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(false); return; }
+      if (!native) trapTab(root, e);
+    });
+    if (native) root.addEventListener('cancel', function (e) { e.preventDefault(); finish(false); });
+    return {
+      native: native,
+      ask: function (opts) {
+        if (resolver) finish(false);
+        title.textContent = opts.title || '確認';
+        msg.textContent = opts.message || '';
+        ok.textContent = opts.ok || 'OK';
+        cancel.hidden = opts.cancel === null;
+        cancel.textContent = opts.cancel || 'やめる';
+        returnFocus = document.activeElement;
+        return new Promise(function (resolve) {
+          resolver = resolve;
+          if (native) {
+            try { root.showModal(); } catch (e) { root.setAttribute('open', ''); }
+          } else {
+            root.hidden = false; setBackgroundInert(true);
+          }
+          (cancel.hidden ? ok : cancel).focus();
+        });
+      }
+    };
+  }
+  function askDialog(opts) { return dialogApi.ask(opts); }
+
+  // ---- ボトムシート（日付の詳細・記録の詳細・バックアップで共用）----
+  var sheetReturnFocus = null;
+  var sheetCtx = null; // { kind: 'day'|'rec'|'backup', arg }
+  function sheetIsOpen() { var s = $('sheet'); return !!(s && !s.hidden); }
+  function fillSheet() {
+    var body = $('sheet-body');
+    clear(body);
+    if (!sheetCtx) return;
+    if (sheetCtx.kind === 'day') buildDaySheet(body, sheetCtx.arg);
+    else if (sheetCtx.kind === 'rec') buildRecSheet(body, sheetCtx.arg);
+    else if (sheetCtx.kind === 'backup') buildBackupSheet(body);
+  }
+  function openSheet(kind, arg, returnEl) {
+    var sheet = $('sheet'), back = $('sheet-backdrop');
+    if (!sheet) return;
+    sheetCtx = { kind: kind, arg: arg };
+    fillSheet();
+    sheet.scrollTop = 0;
+    sheetReturnFocus = returnEl || document.activeElement;
+    back.hidden = false;
+    sheet.hidden = false;
+    setBackgroundInert(true);
+    if (!prefersReduced()) {
+      sheet.classList.add('is-entering');
+      requestAnimationFrame(function () { requestAnimationFrame(function () { sheet.classList.remove('is-entering'); }); });
+    }
+    $('sheet-close').focus();
+    updateAnimation();
+  }
+  function refreshSheet() { if (sheetIsOpen()) fillSheet(); }
+  function closeSheet() {
+    var sheet = $('sheet');
+    if (!sheet || sheet.hidden) return;
+    sheet.hidden = true;
+    sheet.classList.remove('is-entering');
+    $('sheet-backdrop').hidden = true;
+    sheetCtx = null;
+    clear($('sheet-body'));
+    setBackgroundInert(false);
+    var r = sheetReturnFocus; sheetReturnFocus = null;
+    if (r && document.contains(r) && typeof r.focus === 'function') { try { r.focus(); } catch (e) { /* なにもしない */ } }
+    updateAnimation();
+  }
+
+  // 動きを減らす設定
+  var reduceMQ = null;
+  try { reduceMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null; } catch (e) { reduceMQ = null; }
+  function prefersReduced() { return !!(reduceMQ && reduceMQ.matches); }
+
+  // ---- 動き（動きの名前24から）----
+  // 同じ動きをもう一度流す（クラスをつけ直す）
+  function playAnim(node, cls, ms) {
+    if (!node || prefersReduced()) return;
+    node.classList.remove(cls);
+    void node.offsetWidth;
+    node.classList.add(cls);
+    setTimeout(function () { node.classList.remove(cls); }, ms || 500);
+  }
+  // 1 リップル：押した所から波紋が広がる
+  function rippleHandler(e) {
+    if (prefersReduced()) return;
+    var t = e.target && e.target.closest ? e.target.closest('.btn, .nav-link, .drawer-item, .btn-icon, .pending-btn') : null;
+    if (!t || t.disabled) return;
+    var r = t.getBoundingClientRect();
+    var d = Math.max(r.width, r.height) * 2;
+    var span = document.createElement('span');
+    span.className = 'ripple';
+    span.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + (e.clientX - r.left - d / 2) + 'px;top:' + (e.clientY - r.top - d / 2) + 'px';
+    t.appendChild(span);
+    setTimeout(function () { if (span.parentNode) span.parentNode.removeChild(span); }, 650);
+  }
+  // 18 シェイク：まちがえると横に震える
+  function shake(node) { playAnim(node, 'is-shake', 450); }
+  // 3 ローディングボタン：くるくる→チェック（見た目だけ。保存そのものは先に終わっている）
+  var saveBtnTimer = null;
+  function saveButtonFeedback() {
+    var b = document.getElementById('rec-save');
+    if (!b) return;
+    var lab = b.querySelector('.btn-label');
+    if (!lab) { lab = document.createElement('span'); lab.className = 'btn-label'; lab.textContent = b.textContent; b.textContent = ''; b.appendChild(lab); }
+    clearTimeout(saveBtnTimer);
+    lab.textContent = '✓ 保存しました';
+    saveBtnTimer = setTimeout(function () { lab.textContent = '保存する'; }, 1200);
+  }
+  // 15 コンフェッティ：色が決まったときに、その色を中心に紙吹雪が舞う
+  function celebrate(paletteId) {
+    if (prefersReduced()) return;
+    var pal = PALETTES[paletteId];
+    if (!pal) return;
+    var afterBox = document.getElementById('rec-after');
+    var anchor = afterBox && !afterBox.hidden ? afterBox.querySelector('.swatch') : null;
+    var r = anchor ? anchor.getBoundingClientRect() : null;
+    var ox = r ? r.left + r.width / 2 : window.innerWidth / 2;
+    var oy = r ? r.top + r.height / 2 : window.innerHeight / 3;
+    var box = document.createElement('div');
+    box.className = 'confetti'; box.setAttribute('aria-hidden', 'true');
+    var colors = [pal.gradient[0], pal.gradient[1], '#fbbf24', '#38bdf8', '#f43f5e'];
+    for (var i = 0; i < 22; i++) {
+      var a = Math.random() * Math.PI * 2, dist = 60 + Math.random() * 90;
+      var piece = document.createElement('span');
+      piece.className = 'confetti-piece';
+      piece.style.cssText = 'left:' + ox + 'px;top:' + oy + 'px;background:' + colors[i % colors.length] +
+        ';--dx:' + (Math.cos(a) * dist) + 'px;--dy:' + (Math.sin(a) * dist - 40) + 'px;--rot:' + (Math.random() * 540 - 270) + 'deg;animation-delay:' + Math.floor(Math.random() * 80) + 'ms';
+      box.appendChild(piece);
+    }
+    document.body.appendChild(box);
+    setTimeout(function () { if (box.parentNode) box.parentNode.removeChild(box); }, 1300);
+  }
+
+  // =========================================================
+  // 共通基盤：状態・お知らせ・画面切替
+  // =========================================================
+  var nowInit = new Date();
+  var state = {
+    store: null, meta: null, metaWritable: true, screen: 'record', firstRoute: true,
+    calY: nowInit.getFullYear(), calM: nowInit.getMonth(),
+    afterKey: null, afterBuiltFor: null
+  };
+  var SCREENS = {};
+  var SCREEN_NAMES = ['record', 'long', 'calendar', 'export'];
+  // 古いリンクの転送先
+  var OLD_HASH = { home: 'record', voyage: 'calendar', map: 'calendar' };
+
+  function renderNotices() {
+    var box = $('notices');
+    clear(box);
+    var s = state.store;
+    if (s.unavailable) box.appendChild(el('div', { class: 'notice' }, 'このブラウザでは保存場所が使えません。記録は保存されません（プライベートモードなどの可能性）。'));
+    if (s.broken) box.appendChild(el('div', { class: 'notice' }, '保存データを読めませんでした（' + s.brokenReason + '）。元のデータを守るため、新しい記録は保存しません。カレンダー画面の下の「バックアップ」から、そのままの文字を保存できます。'));
+    if (s.invalidCount > 0) box.appendChild(el('div', { class: 'notice' }, '形が合わない記録が ' + s.invalidCount + ' 件あったため、表示から外しました（保存データからは消していません）。'));
+  }
+
+  function renderHeader() {
+    var now = new Date();
+    $('today-label').textContent = (now.getMonth() + 1) + '月' + now.getDate() + '日';
+    $('header-count').textContent = '計 ' + viewRecords().length + ' 夜';
+  }
+
+  function currentScreen() {
+    var h = (window.location.hash || '').replace(/^#/, '');
+    if (Object.prototype.hasOwnProperty.call(OLD_HASH, h)) {
+      var to = OLD_HASH[h];
+      try { window.history.replaceState(null, '', '#' + to); } catch (e) { /* なにもしない */ }
+      return to;
+    }
+    return SCREEN_NAMES.indexOf(h) !== -1 ? h : 'record';
+  }
+
+  function route() {
+    if (sheetIsOpen()) closeSheet();
+    closeDrawer(false);
+    var name = currentScreen();
+    var changed = name !== state.screen;
+    state.screen = name;
+    SCREEN_NAMES.forEach(function (n) {
+      var sec = $('screen-' + n);
+      if (sec) sec.hidden = n !== name;
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-nav]'), function (a) {
+      if (a.getAttribute('data-nav') === name) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+    renderAll();
+    if (!state.firstRoute && changed) {
+      var main = $('app-main');
+      try { window.scrollTo(0, 0); } catch (e) { /* なにもしない */ }
+      if (main) { try { main.focus({ preventScroll: true }); } catch (e) { main.focus(); } }
+    }
+    state.firstRoute = false;
+    updateAnimation();
+  }
+
+  function go(name) {
+    if (('#' + name) === window.location.hash) route();
+    else window.location.hash = name;
+  }
+
+  function renderAll() {
+    renderHeader();
+    renderNotices();
+    var scr = SCREENS[state.screen];
+    if (scr && typeof scr.render === 'function') {
+      try { scr.render(); }
+      catch (e) {
+        var sec = $('screen-' + state.screen);
+        if (sec) sec.appendChild(el('div', { class: 'notice' }, '表示中に問題が起きました。記録そのものは消えていません。'));
+        if (window.console) console.error(e);
+      }
+    }
+  }
+
+  function reloadAndRender() { state.store = readStore(); renderAll(); refreshSheet(); updateAnimation(); }
+
+  // ---- バックアップを保存 ----
+  function downloadText(filename, text, mime) {
+    try {
+      if (typeof Blob !== 'function' || !window.URL || typeof URL.createObjectURL !== 'function') return false;
+      var blob = new Blob([text], { type: mime });
+      var url = URL.createObjectURL(blob);
+      var a = el('a', { href: url, download: filename });
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { try { URL.revokeObjectURL(url); } catch (e) { /* なにもしない */ } }, 15000);
+      return true;
+    } catch (e) { return false; }
+  }
+  function stamp() {
+    var d = new Date();
+    function p2(n) { return (n < 10 ? '0' : '') + n; }
+    return '' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '_' + p2(d.getHours()) + p2(d.getMinutes());
+  }
+  function showExportFallback(text) {
+    if (state.screen === 'export') {
+      $('export-page-fallback-text').value = text;
+      $('export-page-fallback').hidden = false;
+      return;
+    }
+    var box = $('export-fallback'), ta = $('export-fallback-text');
+    if (!box || !ta) return;
+    ta.value = text;
+    box.hidden = false;
+  }
+  function exportPayloadText() {
+    var fresh = readStore();
+    if (fresh.unavailable || fresh.broken) return null;
+    return JSON.stringify({ app: APP_NAME, schemaVersion: SCHEMA_VERSION, exportedAt: new Date().toISOString(), sandbox: SANDBOX, records: fresh.raw }, null, 2);
+  }
+  function markExported() {
+    state.meta.lastExportAt = new Date().toISOString();
+    saveMeta();
+    var st = $('bk-status'); if (st) st.textContent = exportStatusText();
+  }
+  function exportShow() {
+    var errEl = $('set-export-err');
+    if (errEl) errEl.textContent = '';
+    var text = exportPayloadText();
+    if (text === null) { if (errEl) errEl.textContent = '保存データが使えないため、表示できる記録がありません。'; return; }
+    showExportFallback(text);
+    markExported();
+    toast('文字をすべてコピーして、メモなどに保存してください。');
+    var ta = $('export-fallback-text'); if (ta) { try { ta.focus(); ta.select(); } catch (e) { /* なにもしない */ } }
+  }
+  function exportData() {
+    var errEl = $('set-export-err');
+    if (errEl) errEl.textContent = '';
+    var text = exportPayloadText();
+    if (text === null) {
+      if (errEl) errEl.textContent = state.store.broken ? '保存データが壊れています。下の「読めなかったデータをそのまま保存する」を使ってください。' : '保存場所が使えないため、保存できる記録がありません。';
+      toast('バックアップを保存できませんでした');
+      return;
+    }
+    var ok = downloadText('dream-karte-backup_' + stamp() + '.json', text, 'application/json');
+    if (!ok) showExportFallback(text);
+    markExported();
+    toast(ok ? 'バックアップの保存を始めました。ファイルが保存されたか確かめてください。' : '下の欄の文字をコピーして保存してください。');
+  }
+  // 読みやすい文章（日付・色・理由・本文）の書き出し
+  function exportReadable() {
+    var status = $('export-status');
+    var recs = state.store.valid.slice().sort(function (a, b) { return (a.time || 0) - (b.time || 0); });
+    var lines = ['夢と心のいろ帖 記録の書き出し', '書き出した日: ' + new Date().toLocaleDateString('ja-JP'), '記録数: ' + recs.length + ' 件', ''];
+    recs.forEach(function (r) {
+      var d = displayOf(r);
+      lines.push('■ ' + (r.date || '日付なし') + '　' + (d.kind === 'judged' ? '色: ' + d.name + '（' + d.desc + '）' : '色: ' + d.name));
+      if (r.analysis) lines.push('理由: ' + r.analysis.replace(/^判定（/, '（'));
+      lines.push((r.text === '' ? '（本文なし）' : r.text));
+      lines.push('');
+    });
+    lines.push('※ 色は文章の言葉から決めた目安です。診断や心の状態の評価ではありません。');
+    var text = lines.join('\n');
+    var ok = downloadText('dream-karte-readable_' + stamp() + '.txt', text, 'text/plain');
+    if (!ok) showExportFallback(text);
+    if (status) status.textContent = ok ? '文章の保存を始めました。ファイルが保存されたか確かめてください。' : '下の欄の文字をコピーして保存してください。';
+  }
+  function exportRaw() {
+    var fresh = readStore();
+    var text = fresh.rawString === null ? '' : fresh.rawString;
+    var ok = downloadText('dream-karte-raw_' + stamp() + '.txt', text, 'text/plain');
+    if (!ok) showExportFallback(text);
+    toast(ok ? '読めなかったデータを保存しました。' : '下の欄の文字をコピーして保存してください。');
+  }
+
+  // ---- バックアップから戻す ----
+  function readFileText(file) {
+    if (file && typeof file.text === 'function') return file.text();
+    return new Promise(function (resolve, reject) {
+      try {
+        var fr = new FileReader();
+        fr.onload = function () { resolve(String(fr.result)); };
+        fr.onerror = function () { reject(fr.error); };
+        fr.readAsText(file);
+      } catch (e) { reject(e); }
+    });
+  }
+  function handleImportFile(file) {
+    var errEl = $('set-import-err') || el('p');
+    errEl.textContent = '';
+    if (!file) return Promise.resolve();
+    if (!writable(state.store)) { errEl.textContent = '保存データが使えない状態のため、戻せません。'; return Promise.resolve(); }
+    if (file.size > MAX_IMPORT_BYTES) { errEl.textContent = 'ファイルが大きすぎます（5MBまで）。'; return Promise.resolve(); }
+    return readFileText(file).then(function (text) {
+      var parsed = parseImportText(text);
+      if (parsed.error) { errEl.textContent = parsed.error; return; }
+      var fresh = readStore();
+      var a = analyzeImport(parsed.list, fresh.raw);
+      var summary = '戻せる記録：' + a.toAdd.length + ' 件\nすでにある記録のため飛ばす：' + a.dup + ' 件\n形が合わず飛ばす：' + a.invalid + ' 件';
+      if (a.toAdd.length === 0) {
+        return askDialog({ title: '戻せる記録はありません', message: summary, ok: '閉じる', cancel: null });
+      }
+      return askDialog({ title: 'バックアップから戻しますか？', message: summary + '\n\n今の記録は消えません（足すだけです）。', ok: '戻す', cancel: 'やめる' })
+        .then(function (yes) {
+          if (!yes) { toast('戻すのをやめました'); return; }
+          var res = appendRecords(a.toAdd);
+          if (!res.ok) { errEl.textContent = res.msg; return; }
+          toast(a.toAdd.length + ' 件を戻しました');
+          renderAll();
+          updateAnimation();
+        });
+    }).catch(function () {
+      errEl.textContent = 'ファイルを読めませんでした。';
+    });
+  }
+
+  function buildBackupSheet(body) {
+    $('sheet-title').textContent = 'バックアップ';
+    var s = state.store;
+    var bad = !!(s.broken || s.unavailable);
+    body.appendChild(el('p', { class: 'text-sub' }, '記録はこのスマホの中だけにあります。ときどきファイルに保存しておくと安心です。'));
+    body.appendChild(el('p', { class: 'text-body', id: 'bk-status' }, exportStatusText() + (exportRecommended() ? ' 保存をおすすめします。' : '')));
+
+    var exp = el('button', { type: 'button', class: 'btn btn-primary btn-block', id: 'bk-export' }, 'バックアップを保存する');
+    exp.disabled = bad;
+    exp.addEventListener('click', exportData);
+    body.appendChild(exp);
+
+    var canImport = writable(s);
+    var imp = el('input', { type: 'file', id: 'bk-import', class: 'file-input', accept: 'application/json,.json,text/plain' });
+    imp.disabled = !canImport;
+    imp.addEventListener('change', function (e) {
+      var f = e.target.files && e.target.files[0];
+      var p = handleImportFile(f);
+      var reset = function () { try { e.target.value = ''; } catch (x) { /* なにもしない */ } };
+      if (p && p.then) p.then(reset, reset); else reset();
+    });
+    body.appendChild(el('div', null, imp,
+      el('label', { for: 'bk-import', class: 'btn btn-secondary btn-block file-label', id: 'bk-import-label', 'aria-disabled': canImport ? 'false' : 'true' }, 'バックアップから戻す')));
+    body.appendChild(el('p', { class: 'text-xs' }, '戻すときは、今の記録を消さずに足します。始める前に確認が出ます。'));
+
+    var show = el('button', { type: 'button', class: 'btn btn-secondary btn-block', id: 'bk-show' }, '文字で表示してコピーする');
+    show.disabled = bad;
+    show.addEventListener('click', exportShow);
+    body.appendChild(show);
+
+    var fbText = el('textarea', { id: 'export-fallback-text', class: 'fallback-text', readonly: true, 'aria-label': 'バックアップの文字' });
+    var fbCopy = el('button', { type: 'button', class: 'btn btn-secondary btn-block', id: 'bk-copy' }, 'この文字をコピーする');
+    fbCopy.addEventListener('click', function () {
+      copyText(fbText.value).then(function () { toast('コピーしました。メモなどに貼って保存してください。'); },
+        function () { toast('コピーできませんでした。文字を長押しして選んでください。'); });
+    });
+    body.appendChild(el('div', { id: 'export-fallback', hidden: true },
+      el('p', { class: 'text-xs' }, '下の文字をすべてコピーして、メモなどに保存してください。'), fbText, el('div', { style: 'margin-top:8px' }, fbCopy)));
+
+    body.appendChild(el('p', { class: 'field-err', id: 'set-export-err', 'aria-live': 'polite' }));
+    body.appendChild(el('p', { class: 'field-err', id: 'set-import-err', 'aria-live': 'polite' }));
+
+    var sc = sampleCount();
+    if (sc > 0) {
+      var cb = el('input', { type: 'checkbox', id: 'set-exclude-samples' });
+      cb.checked = !!state.meta.excludeSamples;
+      cb.addEventListener('change', function () {
+        state.meta.excludeSamples = !!cb.checked;
+        if (!saveMeta()) toast('設定はこの画面を開いている間だけ有効です（保存できませんでした）');
+        renderAll(); updateAnimation();
+      });
+      body.appendChild(el('div', null,
+        el('label', { class: 'switch-row', for: 'set-exclude-samples' }, cb, el('span', null, '見本の記録（' + sc + '件）を数えない')),
+        el('p', { class: 'text-xs' }, '前の版が自動で入れた見本の記録です。消さずに残してあります。')));
+    }
+    if (s.broken) {
+      var raw = el('button', { type: 'button', class: 'btn btn-secondary btn-block', id: 'set-export-raw' }, '読めなかったデータをそのまま保存する');
+      raw.addEventListener('click', exportRaw);
+      body.appendChild(el('div', null, el('p', { class: 'text-sub' }, '保存データが読めない状態です。そのままの文字を保存して残せます。'), raw));
+    }
+  }
+
+  // =========================================================
+  // 色をつける（AIに聞く用の文 → AIの答えを貼る → 反映）
+  // =========================================================
+  var COLOR_LABELS = {
+    '暖': 'coral', '明': 'gold', '冷': 'sky', '暗': 'indigo',
+    // 互換：前の版の色の名前
+    '珊瑚': 'coral', '金': 'gold', '空色': 'sky', '灰': 'indigo', '苔': 'sky', '紺': 'indigo'
+  };
+  function buildJudgePrompt(dreamText) {
+    return [
+      'あなたは臨床心理士と精神保健福祉士の視点を持つ専門家役です。診断はしません。',
+      '次の夢の本文だけを根拠に、4色のうち1色を判定してください。',
+      '判定の手順：①本人が書いた感情語を最優先 ②強い緊張（逃げる・落ちる・闇）があっても、本人が落ち着いていたと書けば感情を優先 ③感情が混ざるときは最後の感情と目覚め方を採る ④感情語がなければ場面から推測し確信度を下げる ⑤不安・恐れ・焦り・負荷・強い緊張は暗、静けさや淡い寂しさは冷 ⑥「夜」だけで暗にしない ⑦色で良し悪しを決めつけない',
+      '色の候補：暖（高揚・喜び・感動）／明（安心・希望・満ち足り）／冷（静けさ・安らぎ・平常・淡い寂しさ）／暗（不安・恐れ・焦り・負荷・強い緊張）',
+      '答えは次の形式だけで返してください。',
+      '色：（暖／明／冷／暗のどれか）',
+      '確信度：（高／中／低）',
+      '理由：（本文のどこから判断したか、一文で）',
+      '',
+      '【夢の本文】',
+      dreamText
+    ].join('\n');
+  }
+  function parseJudgment(reply) {
+    var s = String(reply == null ? '' : reply);
+    var c = s.match(/色\s*[：:]\s*[*「『【\s]*(空色|珊瑚|暖|明|冷|暗|金|灰|苔|紺)/);
+    if (!c) return null;
+    var k = s.match(/確信度\s*[：:]\s*[*「『【\s]*(高|中|低)/);
+    var r = s.match(/理由\s*[：:]\s*(.+)/);
+    var reason = r ? r[1].replace(/\*+/g, '').trim() : '';
+    return {
+      paletteId: COLOR_LABELS[c[1]],
+      analysis: '判定（確信度：' + (k ? k[1] : '未記載') + '）' + (reason ? '：' + reason : '')
+    };
+  }
+  function execCopy(t) {
+    return new Promise(function (resolve, reject) {
+      try {
+        var ta = el('textarea', { style: 'position:fixed;left:-9999px;top:0', readonly: true });
+        ta.value = t; document.body.appendChild(ta); ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        ok ? resolve() : reject(new Error('copy'));
+      } catch (e) { reject(e); }
+    });
+  }
+  function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(t).catch(function () { return execCopy(t); });
+    }
+    return execCopy(t);
+  }
+  function applyColor(key, paletteId, analysis) {
+    var p = PALETTES[paletteId];
+    if (!p || COLOR_ORDER.indexOf(paletteId) === -1) return { ok: false, msg: '色が分かりませんでした。' };
+    return updateRecordFields(key, { paletteId: p.id, score: p.score, title: '「' + p.short + '」の夢', analysis: analysis });
+  }
+  function findRecord(key) {
+    var v = state.store.valid;
+    for (var i = 0; i < v.length; i++) if (v[i].key === key) return v[i];
+    return null;
+  }
+
+  // 色をつける手順の部品（記録1件ぶん）。onDone は反映できたときに呼ぶ
+  var judgeSeq = 0;
+  function judgeBlock(rec, onDone) {
+    var n = ++judgeSeq;
+    var taId = 'judge-in-' + n;
+    var status = el('p', { class: 'judge-status', 'aria-live': 'polite', 'data-role': 'status' });
+    var manual = el('textarea', { class: 'fallback-text', readonly: true, 'aria-label': 'AIに聞く用の文', hidden: true });
+    var copyBtn = el('button', { type: 'button', class: 'btn btn-secondary btn-block', 'data-role': 'copy' }, 'AIに聞く用の文をコピー');
+    var ta = el('textarea', { id: taId, class: 'textarea judge-in', rows: '4', 'data-role': 'answer', placeholder: '例：色：冷 ／ 確信度：中 ／ 理由：…' });
+    var applyBtn = el('button', { type: 'button', class: 'btn btn-primary btn-block', 'data-role': 'apply' }, 'この答えで色をつける');
+    function say(msg, isErr) { status.textContent = msg; status.classList.toggle('is-err', !!isErr); }
+    copyBtn.addEventListener('click', function () {
+      var prompt = buildJudgePrompt(rec.text);
+      copyText(prompt).then(function () {
+        manual.hidden = true;
+        say('コピーしました。AI（ChatGPT や Gemini など）に貼って送り、返ってきた答えを下の欄に貼ってください。');
+      }, function () {
+        manual.value = prompt; manual.hidden = false;
+        say('コピーできませんでした。下の文を長押しして全部選び、コピーしてください。', true);
+      });
+    });
+    applyBtn.addEventListener('click', function () {
+      var j = parseJudgment(ta.value);
+      if (!j) { say('「色：暖」のような行が見つかりません。AIの答えをそのまま貼ってください。', true); return; }
+      var res = applyColor(rec.key, j.paletteId, j.analysis);
+      if (!res.ok) { say(res.msg, true); return; }
+      toast('「' + PALETTES[j.paletteId].short + '」の色をつけました');
+      if (typeof onDone === 'function') onDone(j);
+    });
+    return el('div', { class: 'judge', 'data-key': rec.key },
+      el('ol', { class: 'judge-steps' },
+        el('li', null, '「AIに聞く用の文をコピー」を押す'),
+        el('li', null, 'AI（ChatGPT や Gemini など）に貼って送る'),
+        el('li', null, '返ってきた答えを下の欄に貼る'),
+        el('li', null, '「この答えで色をつける」を押す')),
+      copyBtn, manual,
+      el('label', { for: taId, class: 'field-label' }, 'AIの答えをここに貼る'),
+      ta, applyBtn, status,
+      el('p', { class: 'text-xs' }, NOTE_TEXT));
+  }
+
+  // 自分で色を選ぶ・直す（カレンダーの詳細の中だけ）
+  function fixBox(rec) {
+    var buttons = COLOR_ORDER.map(function (pid) {
+      var p = PALETTES[pid];
+      var b = el('button', { type: 'button', class: 'btn btn-secondary fix-btn', 'data-color': pid },
+        el('span', { class: 'swatch swatch-sm', style: 'background:' + gradientCss(p), 'aria-hidden': 'true' }), p.short + '（' + p.meaning.split('・')[0] + '）');
+      b.addEventListener('click', function () {
+        var res = applyColor(rec.key, pid, '自分で選んだ色');
+        if (!res.ok) { toast(res.msg); return; }
+        toast('「' + p.short + '」に直しました');
+        renderAll(); refreshSheet(); updateAnimation();
+      });
+      return b;
+    });
+    return el('details', { class: 'fix-box' },
+      el('summary', null, isJudged(rec) ? '色を直す' : '自分で色を選ぶ'),
+      el('div', { class: 'fix-grid' }, buttons));
+  }
+
+  function colorLine(d) {
+    var sw = d.p
+      ? el('span', { class: 'swatch swatch-sm', style: 'background:' + gradientCss(d.p), 'aria-hidden': 'true' })
+      : el('span', { class: 'swatch swatch-sm swatch-pending', 'aria-hidden': 'true' });
+    return [sw, d.name + '（' + d.desc + '）'];
+  }
+
+  // 記録1件の詳細（シートの中）
+  function recordView(rec) {
+    var d = displayOf(rec);
+    var box = el('div', { class: 'rec-block', 'data-key': rec.key });
+    var reason = rec.analysis !== '' ? rec.analysis.replace(/^判定（/, '（') : (d.kind === 'judged' ? '（理由の記録はありません）' : 'まだありません');
+    box.appendChild(el('dl', { class: 'meta-list' },
+      el('dt', null, '色'), el('dd', { 'data-role': 'color-name' }, colorLine(d)),
+      el('dt', null, '理由'), el('dd', null, reason)));
+    box.appendChild(el('p', { class: 'text-body text-user' }, rec.text === '' ? '（本文なし）' : rec.text));
+    if (d.kind !== 'judged') {
+      box.appendChild(el('h3', { class: 'card-title' }, '色をつける'));
+      box.appendChild(judgeBlock(rec, function () { renderAll(); refreshSheet(); updateAnimation(); }));
+    }
+    box.appendChild(fixBox(rec));
+    return box;
+  }
+
+  function buildDaySheet(body, dateKey) {
+    var d = parseYMD(dateKey);
+    $('sheet-title').textContent = d ? jpDate(d) : dateKey;
+    var recs = recordsByDay()[dateKey] || [];
+    if (recs.length === 0) { body.appendChild(el('p', { class: 'text-body' }, '記録なし')); return; }
+    if (recs.length > 1) body.appendChild(el('p', { class: 'text-sub' }, 'この日の記録は ' + recs.length + ' 件です。'));
+    recs.forEach(function (r) { body.appendChild(recordView(r)); });
+  }
+  function buildRecSheet(body, key) {
+    var rec = findRecord(key);
+    if (!rec) { $('sheet-title').textContent = '記録'; body.appendChild(el('p', { class: 'text-body' }, 'この記録は見つかりませんでした。')); return; }
+    var d = parseYMD(rec.date);
+    $('sheet-title').textContent = (d ? jpDate(d) : rec.date) + 'の夢';
+    body.appendChild(recordView(rec));
+  }
+
+  // =========================================================
+  // 心の動き（カレンダーの上の帯）
+  // =========================================================
+  function moodFrom(list) {
+    var judged = list.filter(isJudged);
+    var recent = judged.slice(-MOOD_WINDOW);
+    var latest = recent[recent.length - 1];
+    var colors = latest ? PALETTES[latest.paletteId].gradient.slice() : DEFAULT_COLORS.slice();
+    if (recent.length < MOOD_MIN_NIGHTS) {
+      return {
+        level: 0, label: '記録が足りません', colors: colors, spread: null,
+        basis: recent.length === 0
+          ? '色のついた記録がまだないため、静かな絵を出しています。'
+          : '心の動きの目安は、色のついた記録が2夜以上で出します（いま1夜）。'
+      };
+    }
+    var scores = recent.map(function (r) { return r.score; });
+    var spread = Math.max.apply(null, scores) - Math.min.apply(null, scores);
+    var t = MOOD_THRESHOLDS[MOOD_THRESHOLDS.length - 1];
+    for (var i = 0; i < MOOD_THRESHOLDS.length; i++) { if (spread < MOOD_THRESHOLDS[i].below) { t = MOOD_THRESHOLDS[i]; break; } }
+    return {
+      level: t.level, label: t.label, colors: colors, spread: spread,
+      basis: '色のついた直近' + recent.length + '夜の、色の違いの大きさから出した目安です。心や体の状態を判断するものではありません。'
+    };
+  }
+
+  var MOTION = {
+    0: { speed: 0.25, amp: 5,  dots: 6 },
+    1: { speed: 0.4,  amp: 7,  dots: 10 },
+    2: { speed: 0.8,  amp: 11, dots: 16 },
+    3: { speed: 1.3,  amp: 16, dots: 24 },
+    4: { speed: 1.8,  amp: 21, dots: 32 }
+  };
+  var anim = { mood: { level: 0, colors: DEFAULT_COLORS.slice() }, rafId: null, running: false, dots: [], ctx: null, w: 0, h: 0 };
+
+  function moodCanvas() { return $('mood-canvas'); }
+  function animShouldRun() {
+    return !!moodCanvas() && state.screen === 'record' && !document.hidden && !prefersReduced() && !sheetIsOpen() && !!anim.ctx;
+  }
+  function sizeCanvas() {
+    var c = moodCanvas();
+    if (!c) return;
+    if (!anim.ctx) { try { anim.ctx = c.getContext('2d'); } catch (e) { anim.ctx = null; } }
+    var dpr = window.devicePixelRatio || 1;
+    anim.w = c.clientWidth || 300; anim.h = c.clientHeight || 96;
+    c.width = Math.round(anim.w * dpr); c.height = Math.round(anim.h * dpr);
+    if (anim.ctx && anim.ctx.setTransform) anim.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function resetDots() {
+    var m = MOTION[anim.mood.level] || MOTION[0];
+    var rnd = mulberry32(1123 + anim.mood.level); // 種を固定（毎回同じ並び）
+    anim.dots = [];
+    for (var i = 0; i < m.dots; i++) {
+      anim.dots.push({ x: rnd() * anim.w, y: rnd() * anim.h, r: 2 + rnd() * 3, vx: (rnd() - 0.5) * m.speed, vy: (rnd() - 0.5) * m.speed });
+    }
+  }
+  function drawFrame(t, move) {
+    var ctx = anim.ctx;
+    if (!ctx) return;
+    var w = anim.w, h = anim.h;
+    var m = MOTION[anim.mood.level] || MOTION[0];
+    var c1 = anim.mood.colors[0], c2 = anim.mood.colors[1];
+    ctx.clearRect(0, 0, w, h);
+    for (var k = 0; k < 2; k++) {
+      ctx.beginPath();
+      for (var x = 0; x <= w; x += 4) {
+        var y = h / 2 + Math.sin(x * 0.03 + t * 0.001 * m.speed * (k + 1)) * m.amp * (k ? 0.6 : 1) +
+          Math.sin(x * 0.07 - t * 0.0013 * m.speed) * m.amp * 0.3;
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = k ? c2 : c1;
+      ctx.globalAlpha = 0.6;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = c2;
+    anim.dots.forEach(function (d) {
+      if (move) {
+        d.x += d.vx; d.y += d.vy;
+        if (d.x < 0 || d.x > w) d.vx *= -1;
+        if (d.y < 0 || d.y > h) d.vy *= -1;
+      }
+      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+  function loop(t) {
+    if (!animShouldRun()) { stopAnimation(); return; }
+    drawFrame(t, true);
+    anim.rafId = requestAnimationFrame(loop);
+  }
+  function stopAnimation() {
+    if (anim.rafId !== null) { try { cancelAnimationFrame(anim.rafId); } catch (e) { /* なにもしない */ } }
+    anim.rafId = null; anim.running = false;
+  }
+  function updateAnimation() {
+    if (!moodCanvas()) { stopAnimation(); return; }
+    if (state.screen !== 'record') { stopAnimation(); return; }
+    if (!anim.running) sizeCanvas();
+    if (animShouldRun()) {
+      if (!anim.running) { anim.running = true; anim.rafId = requestAnimationFrame(loop); }
+    } else {
+      stopAnimation();
+      drawFrame(0, false); // 止めた絵だけを出す
+    }
+  }
+  function setMood(mood) {
+    var same = anim.mood.level === mood.level && anim.mood.colors[0] === mood.colors[0] && anim.mood.colors[1] === mood.colors[1];
+    anim.mood = { level: mood.level, colors: mood.colors };
+    if (!same || !anim.dots.length) { sizeCanvas(); resetDots(); }
+  }
+
+  // =========================================================
+  // ① きろく
+  // =========================================================
+  var recordBuilt = false;
+  function buildRecordForm() {
+    if (recordBuilt) return;
+    recordBuilt = true;
+    var ta = $('rec-text');
+    (function () { var sb = $('rec-save'); if (sb && !sb.querySelector('.btn-label')) { var lab = document.createElement('span'); lab.className = 'btn-label'; lab.textContent = sb.textContent; sb.textContent = ''; sb.appendChild(lab); } })();
+    ta.addEventListener('input', function () {
+      updateCounter();
+      $('rec-text-err').textContent = '';
+      ta.removeAttribute('aria-invalid');
+    });
+    $('record-form').addEventListener('submit', function (e) { e.preventDefault(); if (saveRecord()) saveButtonFeedback(); });
+  }
+  function updateCounter() {
+    var n = $('rec-text').value.length;
+    var c = $('rec-count');
+    c.textContent = n + ' / ' + MAX_TEXT;
+    c.classList.toggle('is-over', n > MAX_TEXT);
+  }
+  // 文章から自動で色を決める。決まらないとき（判定なし・混ざる）は null を返し、判定待ちのまま残す
+  var AUTO_MAP = { warm: 'coral', bright: 'gold', cool: 'sky', dark: 'indigo' };
+  function autoJudge(text) {
+    var r = DreamJudge.judge(text);
+    if (!r.color || !AUTO_MAP[r.color]) return null;
+    var words = (r.words[r.color] || []).map(function (w) { return w.replace(/\(場面\)$/, '（場面の言葉）'); });
+    var why = words.length ? '根拠の言葉：' + words.join('、') : '';
+    var second = r.second && r.second !== r.color ? '／次点：' + DreamJudge.NAMES_JA[r.second] : '';
+    return {
+      paletteId: AUTO_MAP[r.color],
+      analysis: '判定（自動・確信度：' + r.conf + '）：' + why + second
+    };
+  }
+  function saveRecord() {
+    var ta = $('rec-text');
+    var text = ta.value.replace(/\r\n?/g, '\n').trim();
+    $('rec-save-err').textContent = '';
+    if (text === '') {
+      $('rec-text-err').textContent = '夢の内容を書いてください。';
+      ta.setAttribute('aria-invalid', 'true'); ta.focus(); shake(ta); return false;
+    }
+    if (text.length > MAX_TEXT) {
+      $('rec-text-err').textContent = MAX_TEXT + '文字以内にしてください（いま ' + text.length + ' 文字）。';
+      ta.setAttribute('aria-invalid', 'true'); ta.focus(); shake(ta); return false;
+    }
+    var fresh = readStore();
+    if (!writable(fresh)) {
+      $('rec-save-err').textContent = fresh.unavailable ? 'このブラウザでは保存できません（プライベートモードなどの可能性）。' : BROKEN_MSG;
+      return false;
+    }
+    var rec = makePendingRecord(text, fresh.raw);
+    var res = appendRecords([rec]);
+    if (!res.ok) { $('rec-save-err').textContent = res.msg; return false; }
+    var auto = autoJudge(text);
+    if (auto) applyColor(String(rec.id), auto.paletteId, auto.analysis);
+    state.lastAuto = auto;
+    ta.value = '';
+    updateCounter();
+    state.afterKey = String(rec.id);
+    state.afterBuiltFor = null;
+    toast(state.lastAuto ? '保存しました。文章から「' + PALETTES[state.lastAuto.paletteId].short + '」の色をつけました' : '保存しました。次に色をつけましょう');
+    renderAll();
+    var after = $('rec-after');
+    if (after && !after.hidden) {
+      try { after.scrollIntoView({ block: 'start' }); } catch (e) { /* なにもしない */ }
+      try { after.focus({ preventScroll: true }); } catch (e) { after.focus(); }
+    }
+    return true;
+  }
+
+  // 保存直後の「色をつける」案内（入力中の内容が消えないよう、対象が変わったときだけ作り直す）
+  function renderAfter() {
+    var box = $('rec-after');
+    if (!state.afterKey) { box.hidden = true; clear(box); state.afterBuiltFor = null; return; }
+    var rec = findRecord(state.afterKey);
+    if (!rec) { state.afterKey = null; box.hidden = true; clear(box); state.afterBuiltFor = null; return; }
+    var judged = isJudged(rec);
+    var sig = state.afterKey + (judged ? ':done:' + rec.paletteId : ':open');
+    if (state.afterBuiltFor === sig) return;
+    state.afterBuiltFor = sig;
+    clear(box);
+    box.hidden = false;
+    playAnim(box, 'is-pop', 600);
+    if (judged) {
+      var d = displayOf(rec);
+      box.appendChild(el('h3', { class: 'card-title' }, '色をつけました'));
+      box.appendChild(el('p', { class: 'done-box' }, colorLine(d)));
+      if (rec.analysis) box.appendChild(el('p', { class: 'text-sub' }, '理由：' + rec.analysis.replace(/^判定（/, '（')));
+      box.appendChild(el('p', { class: 'text-xs' }, NOTE_TEXT + '（直すときは、カレンダーで日付を押してください）'));
+      var row = el('div', { class: 'btn-row' },
+        el('a', { href: '#calendar', class: 'btn btn-secondary', id: 'after-to-cal' }, 'カレンダーを見る'));
+      var closeB = el('button', { type: 'button', class: 'btn btn-secondary', id: 'after-close' }, 'とじる');
+      closeB.addEventListener('click', function () { state.afterKey = null; renderAfter(); });
+      row.appendChild(closeB);
+      box.appendChild(row);
+      return;
+    }
+    box.appendChild(el('h3', { class: 'card-title', id: 'after-h' }, '色をつける'));
+    box.appendChild(el('p', { class: 'text-sub' }, '保存しました。いまは「判定待ち」です。AIに聞いて色をつけましょう（あとでも大丈夫です）。'));
+    box.appendChild(judgeBlock(rec, function () { renderAll(); }));
+  }
+
+  function renderPendingList() {
+    var card = $('pending-card'), list = $('pending-list'), more = $('pending-more');
+    clear(list);
+    var waiting = viewRecords().filter(function (r) { return !isJudged(r) && r.key !== state.afterKey; });
+    if (waiting.length === 0) { card.hidden = true; return; }
+    card.hidden = false;
+    var shown = waiting.slice(-PENDING_LIST_MAX).reverse(); // 新しい順
+    shown.forEach(function (r) {
+      var d = displayOf(r);
+      var b = el('button', { type: 'button', class: 'pending-btn', 'data-key': r.key, 'aria-label': r.date + ' ' + d.name + '：' + (r.text.slice(0, 30)) + '（色をつける）' },
+        el('span', { class: 'swatch swatch-pending', 'aria-hidden': 'true' }),
+        el('span', { class: 'pending-main' },
+          el('span', { class: 'pending-date', style: 'display:block' }, r.date + '・' + d.name),
+          el('span', { class: 'pending-text', style: 'display:block' }, r.text === '' ? '（本文なし）' : r.text)),
+        el('span', { class: 'pending-go', 'aria-hidden': 'true' }, '色をつける ›'));
+      b.addEventListener('click', function () { openSheet('rec', r.key, b); });
+      list.appendChild(el('li', null, b));
+    });
+    var rest = waiting.length - shown.length;
+    more.hidden = rest <= 0;
+    more.textContent = rest > 0 ? 'ほかに ' + rest + ' 件あります（カレンダーで日付を押すと色をつけられます）。' : '';
+  }
+
+  SCREENS.record = {
+    render: function () {
+      var mood = moodFrom(viewRecords());
+      $('mood-label').textContent = mood.label;
+      $('mood-basis').textContent = mood.basis + (prefersReduced() ? '（動きを減らす設定のため、止めた絵で表示しています）' : '');
+      setMood(mood);
+      buildRecordForm();
+      $('record-date').textContent = '日付：' + jpDate(new Date()) + '（今日）';
+      updateCounter();
+      var s = state.store;
+      var blocked = !writable(s);
+      $('rec-save').disabled = blocked;
+      $('rec-save-err').textContent = blocked
+        ? (s.unavailable ? 'このブラウザでは保存できません。' : '保存データが壊れているため、いまは保存できません（元のデータを守るため）。')
+        : '';
+      renderAfter();
+      renderPendingList();
+    }
+  };
+
+  // =========================================================
+  // ② カレンダー
+  // =========================================================
+  function dayKeyOf(d) { return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate(); }
+  function recordsByDay() {
+    var map = {};
+    viewRecords().forEach(function (r) {
+      var k = dayKeyOf(new Date(r.time));
+      (map[k] = map[k] || []).push(r);
+    });
+    return map;
+  }
+  var weekdaysBuilt = false;
+  function buildWeekdays() {
+    if (weekdaysBuilt) return;
+    weekdaysBuilt = true;
+    var wd = $('cal-weekdays');
+    ['日', '月', '火', '水', '木', '金', '土'].forEach(function (w, i) {
+      wd.appendChild(el('div', { class: 'cal-wd' + (i === 0 ? ' is-sun' : (i === 6 ? ' is-sat' : '')) }, w));
+    });
+    var lg = $('cal-legend');
+    COLOR_ORDER.forEach(function (pid) {
+      var p = PALETTES[pid];
+      lg.appendChild(el('span', null, el('span', { class: 'swatch', style: 'background:' + gradientCss(p), 'aria-hidden': 'true' }), p.short + '＝' + p.meaning));
+    });
+    lg.appendChild(el('span', null, el('span', { class: 'swatch swatch-pending', 'aria-hidden': 'true' }), '点線＝色がまだ'));
+  }
+  function moveMonth(delta) {
+    var d = new Date(state.calY, state.calM + delta, 1);
+    state.calY = d.getFullYear(); state.calM = d.getMonth();
+    renderCalendar();
+  }
+  function renderCalendar() {
+    buildWeekdays();
+    var y = state.calY, m = state.calM;
+    $('cal-title').textContent = y + '年' + (m + 1) + '月';
+    var now = new Date();
+    var isThisMonth = now.getFullYear() === y && now.getMonth() === m;
+    $('cal-today').disabled = isThisMonth;
+    var grid = $('cal-grid');
+    clear(grid);
+    var byDay = recordsByDay();
+    var first = new Date(y, m, 1);
+    var days = new Date(y, m + 1, 0).getDate();
+    for (var b = 0; b < first.getDay(); b++) grid.appendChild(el('div', { class: 'cal-blank', 'aria-hidden': 'true' }));
+    var todayKey = dayKeyOf(now);
+    for (var day = 1; day <= days; day++) {
+      var key = y + '/' + (m + 1) + '/' + day;
+      var recs = byDay[key] || [];
+      var firstJudged = null, hasWaiting = false;
+      recs.forEach(function (r) { if (isJudged(r)) { if (!firstJudged) firstJudged = r; } else hasWaiting = true; });
+      var cls = 'cal-cell';
+      if (key === todayKey) cls += ' is-today';
+      if (recs.length && !firstJudged) cls += ' has-pending';
+      var label = (m + 1) + '月' + day + '日' + (key === todayKey ? '（今日）' : '');
+      var dot = null;
+      if (firstJudged) {
+        var p = PALETTES[firstJudged.paletteId];
+        dot = el('span', { class: 'cal-dot', style: 'background:' + gradientCss(p), 'aria-hidden': 'true' });
+        label += '、' + p.short;
+      } else if (recs.length) {
+        dot = el('span', { class: 'cal-dot is-pending', 'aria-hidden': 'true' });
+        label += '、色がまだ';
+      } else {
+        label += '、記録なし';
+      }
+      if (recs.length > 1) label += '、' + recs.length + '件';
+      if (firstJudged && hasWaiting) label += '（色がまだの記録あり）';
+      var cell = el('button', { type: 'button', class: cls, 'data-date': key, 'aria-label': label },
+        el('span', { class: 'cal-num', 'aria-hidden': 'true' }, String(day)),
+        dot,
+        recs.length > 1 ? el('span', { class: 'cal-plus', 'aria-hidden': 'true' }, '＋') : null);
+      (function (k, c) { c.addEventListener('click', function () { openSheet('day', k, c); }); })(key, cell);
+      grid.appendChild(cell);
+    }
+  }
+
+  var calBound = false;
+  // 長期の目安。期間ごとに、色の割合を横いっぱいの帯で見せ、夜の数と中立の一文を添える（評価の言葉は使わない）
+  var LONG_MIN_NIGHTS = 3;
+  function judgedByDay(list) {
+    var by = {};
+    list.forEach(function (r) { if (isJudged(r)) by[dayKeyOf(new Date(r.time))] = r; });
+    return by;
+  }
+  // days: 期間の日付の配列。by: 日付キー→判定済みの記録。期間ごとの帯を target に描く
+  function periodBlock(target, title, days, by) {
+    var box = el('div', { class: 'long-period' });
+    box.appendChild(el('p', { class: 'long-label' }, title));
+    var counts = { coral: 0, gold: 0, sky: 0, indigo: 0 };
+    var n = 0;
+    days.forEach(function (d) {
+      var r = by[dayKeyOf(d)];
+      if (r && counts[r.paletteId] !== undefined) { counts[r.paletteId]++; n++; }
+    });
+    if (n < LONG_MIN_NIGHTS) {
+      box.appendChild(el('p', { class: 'long-few' }, '記録が少ないため表示しません。（記録 ' + n + ' 夜）'));
+      target.appendChild(box);
+      return;
+    }
+    var bar = el('div', { class: 'long-bar', 'aria-hidden': 'true' });
+    var idx = 0;
+    COLOR_ORDER.forEach(function (pid) {
+      if (!counts[pid]) return;
+      bar.appendChild(el('span', { style: 'flex:' + counts[pid] + ' 1 0; background:' + PALETTES[pid].gradient[0] + ';--i:' + (idx++) }));
+    });
+    box.appendChild(bar);
+    var sentence = COLOR_ORDER.map(function (pid) { return PALETTES[pid].short + counts[pid]; }).join('・');
+    box.appendChild(el('p', { class: 'long-sentence' }, sentence + '（記録 ' + n + ' 夜）'));
+    target.appendChild(box);
+  }
+  // 今月のカレンダー（色つき）。週ごとの行に「第N週」と、その週の夜の数を添える
+  var WEEKDAY_JA = ['日', '月', '火', '水', '木', '金', '土'];
+  function monthCalendar(target, y, m, by, now) {
+    var first = new Date(y, m, 1);
+    var last = new Date(y, m + 1, 0).getDate();
+    var lead = first.getDay();
+    var cal = el('div', { class: 'long-cal' });
+    cal.appendChild(el('span', { class: 'long-cal-wd', 'aria-hidden': 'true' }, ''));
+    WEEKDAY_JA.forEach(function (w) { cal.appendChild(el('span', { class: 'long-cal-wd', 'aria-hidden': 'true' }, w)); });
+    var rows = Math.ceil((lead + last) / 7);
+    var summary = el('div', { class: 'long-summary' });
+    for (var r = 0; r < rows; r++) {
+      var counts = { coral: 0, gold: 0, sky: 0, indigo: 0 };
+      var n = 0, firstDay = null, lastDay = null;
+      cal.appendChild(el('span', { class: 'long-cal-label' }, '第' + (r + 1) + '週'));
+      for (var c = 0; c < 7; c++) {
+        var day = r * 7 + c - lead + 1;
+        if (day < 1 || day > last) { cal.appendChild(el('span', { class: 'long-cal-day is-blank', 'aria-hidden': 'true' })); continue; }
+        var dt = new Date(y, m, day);
+        var future = dt > now && dayKeyOf(dt) !== dayKeyOf(now);
+        var rec = future ? null : by[dayKeyOf(dt)];
+        if (firstDay === null) firstDay = day;
+        lastDay = day;
+        var cls = 'long-cal-day' + (future ? ' is-future' : '');
+        var style = '';
+        if (rec && counts[rec.paletteId] !== undefined) {
+          counts[rec.paletteId]++; n++;
+          var pal = PALETTES[rec.paletteId];
+          style = 'background:' + pal.gradient[0] + ';';
+          if (rec.paletteId === 'indigo') cls += ' is-white';
+        }
+        cal.appendChild(el('span', { class: cls, style: style, 'aria-label': (m + 1) + '月' + day + '日' + (rec ? '：' + PALETTES[rec.paletteId].short : '') }, String(day)));
+      }
+      if (firstDay === null) continue;
+      var label = '第' + (r + 1) + '週（' + firstDay + '〜' + lastDay + '日）';
+      if (n < LONG_MIN_NIGHTS) {
+        summary.appendChild(el('p', null, label + '：記録が少ないため表示しません。（記録 ' + n + ' 夜）'));
+      } else {
+        summary.appendChild(el('p', null, label + '：' + COLOR_ORDER.map(function (pid) { return PALETTES[pid].short + counts[pid]; }).join('・') + '（記録 ' + n + ' 夜）'));
+      }
+    }
+    target.appendChild(cal);
+    target.appendChild(summary);
+  }
+  // 今月の色の流れ：4つの色の行に、夜ごとの色をにじんだ点で置く。左が月の初め、右が今日。
+  // 点の濃さは「新しい夜ほど濃く」だけを表す（良し悪しは表さない）
+  function monthRibbon(target, y, m, by, now) {
+    var last = new Date(y, m + 1, 0).getDate();
+    var todayDay = (now.getFullYear() === y && now.getMonth() === m) ? now.getDate() : last;
+    var ROW = 36, LABEL_W = 30;
+    var box = el('div', { class: 'ribbon' });
+    var rowsWrap = el('div', { class: 'ribbon-rows' });
+    COLOR_ORDER.forEach(function (pid, ri) {
+      var row = el('div', { class: 'ribbon-row', style: 'top:' + (ri * ROW) + 'px;height:' + ROW + 'px' });
+      row.appendChild(el('span', { class: 'ribbon-name' }, PALETTES[pid].short));
+      rowsWrap.appendChild(row);
+    });
+    box.appendChild(rowsWrap);
+    // 夜ごとの点（今日までの判定済み）
+    var days = [];
+    for (var d = 1; d <= todayDay; d++) { var r = by[dayKeyOf(new Date(y, m, d))]; if (r) days.push({ d: d, rec: r }); }
+    var nDays = days.length;
+    var count = 0;
+    days.forEach(function (x, k) {
+      var ri = COLOR_ORDER.indexOf(x.rec.paletteId);
+      if (ri < 0) return;
+      count++;
+      var pct = ((x.d - 1) + 0.5) / last * 100;
+      var age = nDays <= 1 ? 1 : k / (nDays - 1);       // 0 = 古い, 1 = 新しい
+      var op = (0.25 + 0.75 * age).toFixed(2);
+      var dot = el('span', { class: 'ribbon-dot', 'aria-label': (m + 1) + '月' + x.d + '日：' + PALETTES[x.rec.paletteId].short,
+        style: 'left:' + pct + '%;top:' + (ri * ROW + ROW / 2) + 'px;background:' + PALETTES[x.rec.paletteId].gradient[0] + ';opacity:' + op });
+      rowsWrap.appendChild(dot);
+    });
+    rowsWrap.style.height = (COLOR_ORDER.length * ROW) + 'px';
+    // 日付の目盛り
+    var ticks = el('div', { class: 'ribbon-ticks' });
+    [1, 8, 15, 22, last].forEach(function (t) {
+      if (t > last) return;
+      var tp = Math.min(Math.max((((t - 1) + 0.5) / last * 100), 6), 92);
+      ticks.appendChild(el('span', { style: 'left:' + tp + '%' }, t + '日'));
+    });
+    box.appendChild(ticks);
+    box.appendChild(el('p', { class: 'ribbon-caption' }, '左が月の初め、右が今日に近づきます。点は新しい夜ほど濃くなります。'));
+    target.appendChild(box);
+    var sum = el('p', { class: 'long-sentence' });
+    if (count < LONG_MIN_NIGHTS) sum.textContent = '記録が少ないため、色の流れは表示しません。（記録 ' + count + ' 夜）';
+    else sum.textContent = COLOR_ORDER.map(function (pid) { return PALETTES[pid].short + days.filter(function (x) { return x.rec.paletteId === pid; }).length; }).join('・') + '（記録 ' + count + ' 夜）';
+    target.appendChild(sum);
+  }
+
+  // 直近30日の波：夢の色の傾向を、なめらかな線で描く。高さは色ごとの目安の値（気分の評価ではない）
+  // 前半（昔）と後半（今）を別の濃さで並べ、下の帯で夜ごとの色を見せる
+  var WAVE_DAYS = 30;
+  function smoothPath(p) {
+    if (p.length < 2) return '';
+    var d = 'M' + p[0][0].toFixed(1) + ',' + p[0][1].toFixed(1);
+    for (var i = 1; i < p.length; i++) {
+      var mx = ((p[i - 1][0] + p[i][0]) / 2).toFixed(1);
+      d += ' C' + mx + ',' + p[i - 1][1].toFixed(1) + ' ' + mx + ',' + p[i][1].toFixed(1) + ' ' + p[i][0].toFixed(1) + ',' + p[i][1].toFixed(1);
+    }
+    return d;
+  }
+  function waveBlock(target, by, now) {
+    var box = el('div', { class: 'wave-box' });
+    var days = [];
+    for (var i = WAVE_DAYS - 1; i >= 0; i--) {
+      var dt = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      days.push({ date: dt, rec: by[dayKeyOf(dt)] || null, k: WAVE_DAYS - 1 - i });
+    }
+    var judged = days.filter(function (x) { return x.rec && PALETTES[x.rec.paletteId]; });
+    box.appendChild(el('p', { class: 'long-label' }, '直近30日：夢の色の流れ'));
+    if (judged.length < LONG_MIN_NIGHTS) {
+      box.appendChild(el('p', { class: 'long-few' }, '記録が少ないため波は表示しません。（記録 ' + judged.length + ' 夜）'));
+      target.appendChild(box);
+      return;
+    }
+    var W = 300, H = 120, P = 10;
+    var xy = judged.map(function (x) {
+      var px = P + (x.k / (WAVE_DAYS - 1)) * (W - 2 * P);
+      var py = (H - P) - (PALETTES[x.rec.paletteId].score / 100) * (H - 2 * P);
+      return [px, py];
+    });
+    var half = Math.floor(judged.length / 2);
+    var earlier = xy.slice(0, half + 1);
+    var recent = xy.slice(half);
+    var strips = days.map(function (x) {
+      var px = (P + (x.k / (WAVE_DAYS - 1)) * (W - 2 * P) - 4).toFixed(1);
+      var fill = x.rec ? PALETTES[x.rec.paletteId].gradient[0] : 'transparent';
+      return '<rect x="' + px + '" y="0" width="8" height="10" rx="2" fill="' + fill + '"/>';
+    }).join('');
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + (H + 14) + '" role="img" aria-label="直近30日の夢の色の流れの波" style="width:100%;height:auto;display:block">' +
+      '<g transform="translate(0,0)">' + strips + '</g>' +
+      '<g transform="translate(0,14)">' +
+      '<path d="' + smoothPath(earlier) + '" fill="none" stroke="#b9b3a8" stroke-width="2" stroke-linecap="round"/>' +
+      '<path d="' + smoothPath(recent) + '" fill="none" stroke="#6f8f9a" stroke-width="2.5" stroke-linecap="round"/>' +
+      '</g></svg>';
+    var fig = el('div', { class: 'wave-fig' });
+    fig.innerHTML = svg;
+    box.appendChild(fig);
+    box.appendChild(el('div', { class: 'wave-axis' }, [el('span', null, '30日前'), el('span', null, '今日')]));
+    var warm = function (arr) {
+      var w = 0, c = 0;
+      arr.forEach(function (x) { if (PALETTES[x.rec.paletteId].score >= 75) w++; else c++; });
+      return { w: w, c: c, n: w + c };
+    };
+    var a = warm(judged.slice(0, half));
+    var b = warm(judged.slice(half));
+    box.appendChild(el('p', { class: 'long-sentence' }, '昔（前半）：暖・明 ' + a.w + '夜、冷・暗 ' + a.c + '夜'));
+    box.appendChild(el('p', { class: 'long-sentence' }, '今（後半）：暖・明 ' + b.w + '夜、冷・暗 ' + b.c + '夜'));
+    box.appendChild(el('p', { class: 'ribbon-caption' }, '薄い線が前半、濃い線が後半です。高さは色の目安の値で、気分の評価ではありません。'));
+    target.appendChild(box);
+  }
+  function renderLongCard() {
+    var now = new Date();
+    var by = judgedByDay(viewRecords());
+    // 直近7日
+    var week = [];
+    for (var i = 6; i >= 0; i--) week.push(new Date(now.getFullYear(), now.getMonth(), now.getDate() - i));
+    var wb = $('long-week-body'); clear(wb);
+    periodBlock(wb, '直近7日', week, by);
+    // 今月：カレンダーの形（日〜土）に、夜ごとの色をつける
+    var y = now.getFullYear(), m = now.getMonth();
+    var mb = $('long-month-body'); clear(mb);
+    waveBlock(mb, by, now);
+    $('long-month-label').textContent = y + '年' + (m + 1) + '月';
+  }
+
+  SCREENS.long = { render: function () { renderLongCard(); } };
+
+  SCREENS.export = {
+    render: function () {
+      var n = state.store.valid.length;
+      $('export-count').textContent = '保存できる記録：' + n + ' 件';
+    }
+  };
+
+  function openDrawer() {
+    $('drawer').hidden = false; $('drawer-backdrop').hidden = false;
+    try { $('menu-close').focus(); } catch (e) { /* なにもしない */ }
+  }
+  function closeDrawer(returnFocus) {
+    if ($('drawer').hidden) return;
+    $('drawer').hidden = true; $('drawer-backdrop').hidden = true;
+    if (returnFocus) { try { $('menu-open').focus(); } catch (e) { /* なにもしない */ } }
+  }
+  function bindMenu() {
+    document.addEventListener('pointerdown', rippleHandler, true);
+    $('menu-open').addEventListener('click', openDrawer);
+    $('menu-close').addEventListener('click', function () { closeDrawer(true); });
+    $('drawer-backdrop').addEventListener('click', function () { closeDrawer(true); });
+    $('drawer-export').addEventListener('click', function () { closeDrawer(false); go('export'); });
+    $('export-json').addEventListener('click', exportData);
+    $('export-readable').addEventListener('click', exportReadable);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(true); });
+  }
+
+  SCREENS.calendar = {
+    render: function () {
+      if (!calBound) {
+        calBound = true;
+        $('cal-prev').addEventListener('click', function () { moveMonth(-1); });
+        $('cal-next').addEventListener('click', function () { moveMonth(1); });
+        $('cal-today').addEventListener('click', function () {
+          var n = new Date(); state.calY = n.getFullYear(); state.calM = n.getMonth(); renderCalendar();
+          $('cal-title').focus && $('cal-prev').focus();
+        });
+        $('backup-open').addEventListener('click', function (e) { openSheet('backup', null, e.currentTarget); });
+      }
+      renderCalendar();
+    }
+  };
+
+  // =========================================================
+  // 起動
+  // =========================================================
+
+  // 確認用：保存データが空のとき、過去30日分のダミー記録を入れる（sandbox のみ）
+  function seedDemoRecords() {
+    if (!SANDBOX) return;
+    var raw = readStore();
+    if (raw.raw.length > 0 || raw.broken || raw.unavailable) return;
+    var pattern = ['coral','gold','gold','sky','indigo','coral','gold','sky','sky','indigo','coral','gold','indigo','sky','gold','coral','indigo','sky','gold','coral','sky','indigo','gold','coral','sky','gold','indigo','coral','sky'];
+    var texts = { coral: '祭りの花火を家族と見上げて、胸が高鳴った', gold: '朝の光の中で本を読んでいて、ほっとした', sky: '静かな湖のほとりを、ぼんやり歩いていた', indigo: '締切に追われて焦り、必死に資料を探していた' };
+    var list = [];
+    var now = new Date();
+    pattern.forEach(function (pid, i) {
+      if (i % 4 === 3) return; // 少し空きを作る
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      list.push({ id: 'demo' + i, date: d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate(), text: texts[pid], paletteId: pid,
+        score: PALETTES[pid].score, title: '「' + PALETTES[pid].short + '」の夢', analysis: '判定（自動・確信度：中）：根拠の言葉：' + texts[pid].slice(0, 6) });
+    });
+    try { window.localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { /* なにもしない */ }
+  }
+
+  function init() {
+    seedDemoRecords();
+    state.store = readStore();
+    var m = readMeta();
+    state.meta = m.meta;
+    state.metaWritable = m.writable;
+    if (m.missing && m.writable) saveMeta(); // バージョン番号を別キーに入れる（記録には触れない）
+    dialogApi = buildDialog();
+
+    bindMenu();
+    window.addEventListener('hashchange', route);
+    $('sheet-close').addEventListener('click', closeSheet);
+    $('sheet-backdrop').addEventListener('click', closeSheet);
+    $('sheet').addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { e.preventDefault(); closeSheet(); return; }
+      trapTab($('sheet'), e);
+    });
+
+    document.addEventListener('visibilitychange', updateAnimation);
+    if (reduceMQ) {
+      var onChange = function () { renderAll(); updateAnimation(); };
+      if (typeof reduceMQ.addEventListener === 'function') reduceMQ.addEventListener('change', onChange);
+      else if (typeof reduceMQ.addListener === 'function') reduceMQ.addListener(onChange);
+    }
+    var rt = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(rt);
+      rt = setTimeout(function () { sizeCanvas(); resetDots(); updateAnimation(); }, 150);
+    });
+    window.addEventListener('storage', function (e) { if (e.key === KEY || e.key === META_KEY) { var mm = readMeta(); state.meta = mm.meta; state.metaWritable = mm.writable; reloadAndRender(); } });
+
+    route();
+  }
+
+  // 検証用の読み取り専用の窓口（記録を変える関数は出さない）
+  window.__KARTE__ = Object.freeze({
+    version: document.querySelector('meta[name="app-version"]') ? document.querySelector('meta[name="app-version"]').getAttribute('content') : '',
+    moodFrom: moodFrom,
+    validateRecord: validateRecord,
+    analyzeImport: analyzeImport,
+    readStore: readStore,
+    parseJudgment: parseJudgment,
+    buildJudgePrompt: buildJudgePrompt,
+    displayOf: displayOf,
+    MOOD_THRESHOLDS: MOOD_THRESHOLDS,
+    animState: function () { return { running: anim.running, screen: state.screen }; },
+    dialogNative: function () { return dialogApi ? dialogApi.native : null; }
+  });
+
+  try { init(); }
+  catch (e) {
+    var n = document.getElementById('notices');
+    if (n) n.appendChild(el('div', { class: 'notice' }, '起動中に問題が起きました。記録そのものは消えていません。'));
+    if (window.console) console.error(e);
+  }
+})();
+  </script>
+</body>
+</html>
